@@ -22,6 +22,7 @@ This project is part of the **ENG209: Signals, Systems and Control** course at F
 
 ## 🛠 Hardware Architecture
 **Microcontroller:** Xiao ESP32-S3
+
 **Sensors:** 
 * MAX30102 (Pulse Oximeter & Heart-Rate Sensor)
 * MPU6050 (6-axis IMU)
