@@ -2,52 +2,65 @@
 #include <Wire.h>
 #include "MAX30105.h"
 
-MAX30105 particleSensor;
-const int MPU_ADDR = 0x68; 
+// Địa chỉ và Đối tượng
+const int MPU_ADDR = 0x68;
+MAX30105 ppgSensor;
+
+// Quản lý thời gian (Sampling Rate)
+unsigned long lastSampleTime = 0;
+const int sampleInterval = 10; // 100Hz cho IMU
 
 void setup() {
   Serial.begin(115200);
-  delay(3000);
-  Wire.begin(8, 9);
-  
-  // Khởi tạo IMU
-  Wire.beginTransmission(MPU_ADDR);
-  Wire.write(0x1C); // Địa chỉ của ACCEL_CONFIG
-  Wire.write(0x18); // Giá trị 0x18 tương ứng với +/- 16g 
-  Wire.endTransmission(true);
+  Wire.begin(8, 9); 
 
-  if (particleSensor.begin(Wire, I2C_SPEED_FAST)) {
-    particleSensor.setup(); 
-    particleSensor.setPulseAmplitudeRed(0x0A);
-    particleSensor.setPulseAmplitudeIR(0x1F); // Tăng độ sáng LED IR một chút để nhạy hơn
+  // 1. Khởi tạo MPU6050 (Dựa trên code hiện tại của cậu)
+  Wire.beginTransmission(MPU_ADDR);
+  Wire.write(0x6B); Wire.write(0); Wire.endTransmission(true);
+  
+  // 2. Khởi tạo & Cấu hình MAX30102
+  if (!ppgSensor.begin(Wire, I2C_SPEED_FAST)) {
+    Serial.println(">Status:MAX30102_NotFound");
+    while (1);
   }
+
+  // Cấu hình LED cho MAX30102 (Quan trọng để có data IR)
+  byte ledBrightness = 60; // 0=Off to 255=50mA
+  byte sampleAverage = 4;  // 1, 2, 4, 8, 16, 32
+  byte ledMode = 2;        // 1 = Red only, 2 = Red + IR
+  int sampleRate = 100;    // 50, 100, 200, 400, 800, 1000, 1600, 3200
+  int pulseWidth = 411;    // 69, 118, 215, 411
+  int adcRange = 4096;     // 2048, 4096, 8192, 16384
+
+  ppgSensor.setup(ledBrightness, sampleAverage, ledMode, sampleRate, pulseWidth, adcRange);
 }
 
 void loop() {
-  // Đọc IMU
-  Wire.beginTransmission(MPU_ADDR);
-  Wire.write(0x3B);
-  Wire.endTransmission(false);
-  Wire.requestFrom(MPU_ADDR, 14, true);
-  
-  int16_t ax = Wire.read()<<8 | Wire.read();
-  int16_t ay = Wire.read()<<8 | Wire.read();
-  int16_t az = Wire.read()<<8 | Wire.read();
-  for(int i=0; i<8; i++) Wire.read(); 
+  // Thực hiện đọc dữ liệu theo chu kỳ cố định
+  if (millis() - lastSampleTime >= sampleInterval) {
+    lastSampleTime = millis();
 
-  long irValue = particleSensor.getIR();
+    // --- KHỐI ĐỌC MPU6050 ---
+    Wire.beginTransmission(MPU_ADDR);
+    Wire.write(0x3B);
+    Wire.endTransmission(false);
+    Wire.requestFrom((uint8_t)MPU_ADDR, (uint8_t)6);
 
-  // TRUYỀN DATA
-  Serial.printf(">AccX:%d\n", ax);
-  Serial.printf(">AccY:%d\n", ay);
-  Serial.printf(">AccZ:%d\n", az);
-  
-  // Tăng ngưỡng lên 70,000 để lọc sạch nhiễu "không ấn gì"
-  if (irValue > 70000) { 
-    Serial.printf(">Heart_IR:%ld\n", irValue);
-  } else {
-    Serial.printf(">Heart_IR:0\n"); // Trả về 0 khi không có tay
+    if (Wire.available() >= 6) {
+      int16_t ax = (Wire.read() << 8) | Wire.read();
+      int16_t ay = (Wire.read() << 8) | Wire.read();
+      int16_t az = (Wire.read() << 8) | Wire.read();
+
+      // --- KHỐI ĐỌC MAX30102 ---
+      // Lấy giá trị hồng ngoại (IR)
+      long irValue = ppgSensor.getIR();
+
+      // --- KHỐI GỬI DỮ LIỆU (Theo định dạng script Python yêu cầu) ---
+      // Lưu ý: Heart_IR nên gửi trước AccZ để Python bắt đủ bộ
+      Serial.print(">Heart_IR:"); Serial.println(irValue);
+      Serial.print(">AccX:");     Serial.println(ax);
+      Serial.print(">AccY:");     Serial.println(ay);
+      Serial.print(">AccZ:");     Serial.println(az);
+    }
   }
-
-  delay(20); 
 }

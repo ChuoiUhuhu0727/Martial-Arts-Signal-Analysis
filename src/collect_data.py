@@ -1,49 +1,73 @@
 import serial
 import csv
 import time
+import os
 
-# Cấu hình cổng COM (Giang kiểm tra lại xem có đúng COM4 không nhé)
+# --- Cấu hình ---
 SERIAL_PORT = 'COM4' 
 BAUD_RATE = 115200
-FILE_NAME = "aikido_data.csv"
+SAVE_DIR = r"C:\Users\Admin\Downloads\draft_one_signal_final_project\src"
+FILENAME = os.path.join(SAVE_DIR, f"aikido_data_{int(time.time())}.csv")
 
-try:
-    # Kết nối với ESP32
-    ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
-    time.sleep(2) # Đợi mạch ổn định
-    print(f"--- Đang bắt đầu thu thập dữ liệu từ {SERIAL_PORT} ---")
-    print("Nhấn Ctrl + C để dừng và lưu file.")
-
-    with open(FILE_NAME, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        # Ghi tiêu đề cột
-        writer.writerow(["Timestamp", "AccX", "AccY", "AccZ", "GyroX", "GyroY", "GyroZ"])
-
-        data_row = {}
+def collect():
+    try:
+        ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=0.1)
+        print(f"--- ĐANG THU THẬP DỮ LIỆU ---")
+        print(f"File: {FILENAME}")
         
-        while True:
-            if ser.in_waiting > 0:
-                line = ser.readline().decode('utf-8').strip()
-                
-                # Phân tích cú pháp định dạng >Key:Value
-                if line.startswith(">"):
-                    key_value = line[1:].split(":")
-                    if len(key_value) == 2:
-                        key, value = key_value
-                        data_row[key] = value
+        with open(FILENAME, mode='w', newline='') as f:
+            fieldnames = ["Timestamp", "AccX", "AccY", "AccZ", "Heart_IR"]
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            
+            # Khởi tạo buffer với giá trị None để dễ kiểm tra trạng thái
+            current_data = {"AccX": None, "AccY": None, "AccZ": None, "Heart_IR": None}
+            start_time = time.time()
+            
+            # Biến đếm để tránh spam cảnh báo quá nhiều
+            error_counter = 0
 
-                # Khi đã thu thập đủ 6 trục thì ghi 1 dòng vào CSV
-                if len(data_row) == 6:
-                    timestamp = time.strftime("%H:%M:%S", time.localtime())
-                    row = [timestamp, data_row.get("AccX"), data_row.get("AccY"), 
-                           data_row.get("AccZ"), data_row.get("GyroX"), 
-                           data_row.get("GyroY"), data_row.get("GyroZ")]
-                    writer.writerow(row)
-                    print(f"Đã lưu: {row}")
-                    data_row = {} # Xóa để thu thập dòng tiếp theo
+            while True:
+                if ser.in_waiting > 0:
+                    line = ser.readline().decode('utf-8', errors='ignore').strip()
+                    if line.startswith(">"):
+                        parts = line[1:].split(":")
+                        if len(parts) == 2:
+                            key, val = parts[0], parts[1]
+                            try:
+                                current_data[key] = int(val)
+                            except ValueError:
+                                continue
 
-except KeyboardInterrupt:
-    print("\n--- Đã dừng. Dữ liệu đã được lưu vào file aikido_data.csv ---")
-    ser.close()
-except Exception as e:
-    print(f"Lỗi: {e}")
+                            # TRIGGER: AccZ là điểm chốt dòng (Master Trigger)
+                            if key == "AccZ":
+                                current_data["Timestamp"] = time.time() - start_time
+                                
+                                # --- LOGIC CHẨN ĐOÁN (DIAGNOSTICS) ---
+                                status_msg = "OK"
+                                ppg_val = current_data.get("Heart_IR")
+
+                                if ppg_val is None:
+                                    status_msg = "⚠️ MISSING PPG (Check ESP32 Code)"
+                                elif ppg_val == 0:
+                                    status_msg = "❌ PPG = 0 (Check Sensor/Wiring)"
+                                
+                                # Ghi vào CSV (vẫn ghi để giữ data IMU)
+                                # Nếu PPG trống, điền tạm số 0 để file CSV không lỗi cấu trúc
+                                row_to_write = {k: (v if v is not None else 0) for k, v in current_data.items()}
+                                writer.writerow(row_to_write)
+                                
+                                # In thông báo trạng thái real-time
+                                print(f"T: {current_data['Timestamp']:.1f}s | Z: {val} | IR: {ppg_val} | Status: {status_msg}      ", end='\r')
+                                
+                                # Reset buffer (giữ lại None để vòng sau kiểm tra tiếp)
+                                current_data = {"AccX": None, "AccY": None, "AccZ": None, "Heart_IR": None}
+
+    except KeyboardInterrupt:
+        print(f"\n--- ĐÃ DỪNG THU THẬP ---")
+        print(f"Dữ liệu lưu tại: {FILENAME}")
+    finally:
+        if 'ser' in locals(): ser.close()
+
+if __name__ == "__main__":
+    collect()
