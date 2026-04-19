@@ -1,4 +1,4 @@
-# 🥋 Aikido Punch Intensity Tracker (Member 2: Data Collection & Preprocessing)
+# 🥋 Aikido Punch Intensity Tracker
 
 Dự án này tập trung vào việc thu thập và xử lý dữ liệu đa cảm biến (IMU + PPG) để nhận diện cường độ đòn đánh trong Aikido. Hệ thống sử dụng ESP32 S3 để ghi nhận dữ liệu thời gian thực với tần số 100Hz.
 
@@ -24,6 +24,8 @@ Aikido_Project/
 ├── docs/
 │   └── visual_qc/       # Kho lưu trữ ảnh Plot của các hiệp thu chuẩn (Clean)
 └── README.md
+
+
 
 ## Data Dictionary (For master_dataset.csv)
 Column,Unit,Description
