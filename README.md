@@ -1,43 +1,51 @@
-# Martial Arts Performance & Heart Rate Recovery Analysis
+# 🥋 Aikido Punch Intensity Tracker (Member 2: Data Collection & Preprocessing)
 
-## 📌 Project Overview
-This project is part of the **ENG209: Signals, Systems and Control** course at Fulbright University Vietnam. Our system analyzes martial arts punch intensity and evaluates fitness levels through heart rate recovery post-exercise.
+Dự án này tập trung vào việc thu thập và xử lý dữ liệu đa cảm biến (IMU + PPG) để nhận diện cường độ đòn đánh trong Aikido. Hệ thống sử dụng ESP32 S3 để ghi nhận dữ liệu thời gian thực với tần số 100Hz.
 
-### Key Features:
-**Punch Force Estimation:** Capturing 3-axis acceleration using MPU6050.
-**PPG Signal Analysis:** Monitoring heart rate and recovery speed with MAX30102.
-**Real-time Visualization:** Waveform display of strike impact and heart rate.
-**Fitness Classification:** Using ML to categorize fitness as Excellent, Average, or Poor.
-
----
-
-## 👥 The Team (Team 209-Spring 2026)
-| Name | Major | [cite_start]Primary Responsibilities|
-| :--- | :--- | :--- |
-| **Tran Thanh Tung** | Engineering | Hardware & DSP (Sensor integration, Filter design) |
-| **Hoang Nguyen Ngoc Giang** | Computer Science | Software & Integration (Firmware, FFT, Python GUI) |
-| **Phan Ngoc Quoc Duy** | Engineering | AI & Documentation (Feature extraction, ML Model) |
-
----
-
-## 🛠 Hardware Architecture
-**Microcontroller:** Xiao ESP32-S3
-
-**Sensors:** 
-* MAX30102 (Pulse Oximeter & Heart-Rate Sensor)
-* MPU6050 (6-axis IMU)
-
----
-
-## 📈 Roadmap & Progress Checkpoints
-- [ ] **Week 12: Progress Check 1** - Sensor acquisition verified, raw signal plots, and initial FFT.
-- [ ] **Week 14: Progress Check 2** - End-to-end pipeline integration, filter implementation, and ML model training.
-- [ ] **Week 16: Final Presentation** - Live demo and final report submission.
-
----
+## 🛠 Hardware Configuration
+- **MCU:** ESP32 S3 (Lolin S3 Mini).
+- **IMU:** MPU6050 - Cấu hình dải đo **±16g** để tránh hiện tượng Clipping khi đấm mạnh.
+- **PPG:** MAX30102 - Điều chỉnh LED Brightness để duy trì IR Value trong dải **100k - 200k**, ngăn chặn bão hòa tín hiệu (Saturation).
 
 ## 📂 Project Structure
-* `/src`: ESP32 firmware and main logic.
-* `/notebooks`: Python notebooks for PPG/IMU signal analysis and ML training.
-* `/data`: Raw datasets for heart rate and punch intensity.
-* `/docs`: Project registration form and progress reports.
+Dự án được tổ chức theo cấu trúc chuẩn để dễ dàng bàn giao và mở rộng:
+```text
+Aikido_Project/
+├── data/
+│   ├── raw/             # Chứa 17+ file CSV dữ liệu thô từ các hiệp thu
+│   └── processed/       # File master_dataset_aikido.csv sau khi đã gộp và xử lý
+├── firmware/
+│   └── main.cpp         # Code C++ nạp cho ESP32
+├── scripts/
+│   └── collect_data.py  # Script Python thu thập dữ liệu qua Serial (Relative Path ready)
+├── notebooks/
+│   ├── 5th_analyze_data.ipynb    # Phân tích QC (Clipping, Saturation check)
+│   └── 6th_master_processing.ipynb # Gộp file và trích xuất đặc trưng (Feature Engineering)
+├── docs/
+│   └── visual_qc/       # Kho lưu trữ ảnh Plot của các hiệp thu chuẩn (Clean)
+└── README.md
+
+## Data Dictionary (For master_dataset.csv)
+Column,Unit,Description
+Timestamp,Seconds,Thời gian tương đối tính từ 0s của mỗi hiệp.
+"AccX, Y, Z",Raw LSB,Gia tốc thô 3 trục. Trục Z là trục lực đấm chính.
+Acc_Mag,Raw LSB,Độ lớn gia tốc tổng hợp AccX2+AccY2+AccZ2​.
+Heart_IR,Raw Value,Tín hiệu hồng ngoại thô (PPG) để tính nhịp tim.
+Phase,Label,"0: Rest, 1: Punching, 2: Recovery."
+Intensity_Label,Label,"1: Light, 2: Medium, 3: Intense/Fatigue."
+
+## 🧪 Collection Protocols
+Dữ liệu được thu thập dựa trên các kịch bản thời gian nghiêm ngặt:
+
+LIGHT: 20s Nghỉ - 20s Đấm - 40s Hồi phục.
+
+MEDIUM: 15s Nghỉ - 30s Đấm - 45s Hồi phục.
+
+INTENSE/FATIGUE: 15s Nghỉ - 45s Đấm - 60s Hồi phục.
+
+## 📈 Quality Control Examples
+Dữ liệu được dán nhãn CLEAN khi và chỉ khi:
+
+Không bị Clipping gia tốc (Magnitude < 32,767).
+
+Tín hiệu PPG ổn định, không bị rơi về 0 trong suốt quá trình đấm (Motion Artifacts được kiểm soát).
