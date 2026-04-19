@@ -1,4 +1,4 @@
-# 🥋 Aikido Punch Intensity Tracker
+# 🥋 Punch Intensity Tracker
 
 Dự án thu thập và xử lý dữ liệu đa cảm biến (IMU + PPG) phục vụ nhận diện cường độ đòn đánh Aikido. Hệ thống chạy trên ESP32 S3 với tần số 100Hz.
 
