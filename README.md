@@ -27,7 +27,7 @@ Aikido_Project/
 
 
 
-## Data Dictionary (For master_dataset.csv)
+**## Data Dictionary (For master_dataset.csv)**
 Column,Unit,Description
 Timestamp,Seconds,Thời gian tương đối tính từ 0s của mỗi hiệp.
 "AccX, Y, Z",Raw LSB,Gia tốc thô 3 trục. Trục Z là trục lực đấm chính.
@@ -36,7 +36,7 @@ Heart_IR,Raw Value,Tín hiệu hồng ngoại thô (PPG) để tính nhịp tim.
 Phase,Label,"0: Rest, 1: Punching, 2: Recovery."
 Intensity_Label,Label,"1: Light, 2: Medium, 3: Intense/Fatigue."
 
-## 🧪 Collection Protocols
+**## 🧪 Collection Protocols**
 Dữ liệu được thu thập dựa trên các kịch bản thời gian nghiêm ngặt:
 
 LIGHT: 20s Nghỉ - 20s Đấm - 40s Hồi phục.
@@ -45,7 +45,7 @@ MEDIUM: 15s Nghỉ - 30s Đấm - 45s Hồi phục.
 
 INTENSE/FATIGUE: 15s Nghỉ - 45s Đấm - 60s Hồi phục.
 
-## 📈 Quality Control Examples
+**## 📈 Quality Control Examples**
 Dữ liệu được dán nhãn CLEAN khi và chỉ khi:
 
 Không bị Clipping gia tốc (Magnitude < 32,767).
