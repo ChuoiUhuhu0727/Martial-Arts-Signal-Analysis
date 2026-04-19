@@ -23,11 +23,11 @@ Aikido_Project/
 │   └── 6th_master_processing.ipynb # Gộp file và trích xuất đặc trưng (Feature Engineering)
 ├── docs/
 │   └── visual_qc/       # Kho lưu trữ ảnh Plot của các hiệp thu chuẩn (Clean)
-└── README.md
+└── README.md```
 
 
 
-**## Data Dictionary (For master_dataset.csv)**
+## Data Dictionary (For master_dataset.csv)
 Column,Unit,Description
 Timestamp,Seconds,Thời gian tương đối tính từ 0s của mỗi hiệp.
 "AccX, Y, Z",Raw LSB,Gia tốc thô 3 trục. Trục Z là trục lực đấm chính.
