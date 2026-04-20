@@ -8,7 +8,7 @@ Dự án thu thập và xử lý dữ liệu đa cảm biến (IMU + PPG) phục
 - **PPG:** MAX30102 - IR ổn định ở mức **100k - 200k**.
 
 ## 📂 Project Structure
-Dự án được tổ chức như sau để dễ dàng bàn giao:
+Dự án được tổ chức như sau:
 
 - `data/`: Chứa dữ liệu Raw và Processed (Kèm Data Dictionary riêng).
 - `firmware/`: Code C++ cho ESP32.
