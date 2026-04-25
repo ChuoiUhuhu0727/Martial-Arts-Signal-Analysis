@@ -12,7 +12,7 @@ const int MPU_ADDR = 0x68;
 MAX30105 ppgSensor;
 
 unsigned long lastSampleTime = 0;
-const int sampleInterval = 10; // 100Hz (1 sample every 10ms) [cite: 73]
+const int sampleInterval = 10; // 100Hz (1 sample every 10ms)
 bool isCollecting = false;     // Waiting for 's' command from Python
 
 void setup() {
@@ -32,7 +32,7 @@ void setup() {
   Wire.write(0);    // Wake up sensor
   Wire.endTransmission(true);
 
-  // SET RANGE TO +/- 16G (PREVENT CLIPPING) [cite: 74]
+  // SET RANGE TO +/- 16G (PREVENT CLIPPING)
   Wire.beginTransmission(MPU_ADDR);
   Wire.write(0x1C); // ACCEL_CONFIG register
   Wire.write(0x18); // Write 0x18 for +/- 16g full scale
