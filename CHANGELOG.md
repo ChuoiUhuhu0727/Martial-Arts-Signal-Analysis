@@ -1,5 +1,95 @@
 # Changelog — quyết định ở mức boundary/interface
 
+## 2026-07-28 — Export model 5-class sang C (`activity_classifier_5class.h`) + cập nhật milestone README
+`export_classifier_to_c.py` đọc `models/activity_classifier.pkl`, sinh code C if/else lồng
+nhau y hệt pattern đã có sẵn ở `classifier.h` (3 firmware hiện tại dùng cách này, KHÔNG phải
+TFLite Micro như README roadmap cũ ghi — sự thật đã lệch khỏi roadmap, cập nhật lại cho đúng).
+File mới **không đụng** `classifier.h` cũ (model binary 3-feature, đang chạy thật trên 3
+firmware) — việc tích hợp model 5-class mới vào firmware nào, khi nào, là quyết định của vịt,
+chưa tự động làm. Cũng cập nhật bảng Milestones trong README: M2 (dataset ≥10 subjects), M4
+(LMS benchmarked — giờ có cả RLS/Wiener), M5 (fingertip vs wrist experiment) đánh dấu Done vì
+đã hoàn thành trong session hôm nay/trước đó nhưng chưa từng update bảng; M3 đổi mô tả từ
+"TFLite Micro" sang đúng thực tế (C export), đánh dấu Done phần train+export, còn chờ tích hợp
+firmware. M1 giữ nguyên "In progress" — không đụng tới trong session này.
+
+## 2026-07-28 — 2 thử nghiệm bounded cuối cho research track: reference 3-trục (thất bại) + manh mối P04 (chưa trọn vẹn)
+Refactor `nlms_filter`/`rls_filter`/`wiener_filter` nhận chung 1 "lagged design matrix"
+(`build_lagged()`, trước đó Wiener đã tự làm việc này) thay vì tự quản buffer riêng — cho
+phép cả 3 filter dùng chung interface bất kể reference là 1 kênh (magnitude) hay nhiều kênh.
+**Thử nghiệm 1 — reference 3 trục (ax/ay/az riêng thay vì magnitude gộp):** giả thuyết "gộp
+magnitude mất thông tin hướng" — kết quả NGƯỢC LẠI, pooled MAE mọi filter đều tệ hơn hẳn
+(LMS 26.96→37.44, RLS 29.83→37.65, Wiener 29.96→35.41; baseline không đổi 26.95 vì không phụ
+thuộc reference). Root cause suy đoán: 24 tap thay vì 8 tap, quá nhiều tham số so với lượng
+data 1 session (~45k mẫu, SNR thấp) → overfit nhiễu. Kết luận: giữ magnitude, không dùng
+triaxial. **Thử nghiệm 2 — vì sao P04 làm RLS/Wiener tệ hẳn (46-47bpm) trong khi baseline/LMS
+ổn (18-22bpm):** đo correlation(wrist_bp, accel_bp) mỗi participant — P04 cao nhất (-0.72),
+gợi ý RLS/Wiener (fit khít gần chính xác) có thể đang "ăn" cả tín hiệu tim thật lẫn artifact
+khi 2 tín hiệu tương quan mạnh, trong khi NLMS (điều chỉnh lỏng, dần dần) ít hại hơn. **Nhưng
+P03 có correlation gần tương đương (-0.47) mà không sập nặng như P04** — giả thuyết có cơ sở
+nhưng chưa giải thích trọn vẹn, dừng lại ở đây, không đào thêm. Research track coi như hoàn
+tất pha MVP cho hôm nay — [[project-next-session]].
+
+## 2026-07-28 — Thêm Wiener, hoàn tất so sánh 4 nhánh (baseline/LMS/RLS/Wiener) trên 5 participant — KHÔNG có thuật toán nào thắng rõ ràng
+`wiener_filter()` — batch Wiener-Hopf (giải normal equations 1 lần trên toàn bộ recording,
+KHÔNG online/adaptive như LMS/RLS), cùng n_taps=8 để so sánh công bằng, có regularization
+ridge (cùng rủi ro ill-conditioned như bug RLS windup, ở đây là ma trận R gần suy biến thay
+vì đệ quy nổ số). **Kết quả pooled MAE cuối cùng: baseline=26.95, LMS=26.96, RLS=29.83,
+Wiener=29.96 (bpm)** — baseline và LMS gần như hoà, RLS/Wiener nhỉnh tệ hơn. Mỗi participant
+có "filter thắng" khác nhau (P02→LMS, P03→RLS, P04→LMS, P16→RLS, P17→Wiener), không có mẫu
+số chung. **Kết luận trung thực cho pha MVP của research track:** với tham số hiện tại
+(8-tap FIR, accel magnitude làm reference duy nhất, session ~7.5 phút, N=5 participant),
+chưa thuật toán classical nào chứng minh được lợi ích nhất quán so với không lọc gì. Đây là
+kết quả thật để viết vào paper (Q3 target), không phải thất bại của quy trình — [[project-next-session]].
+
+## 2026-07-28 — Thêm RLS vào `lms_denoise_mvp.py`, bắt + sửa bug windup số học
+RLS đầu tiên chạy nổ số hoàn toàn (residual std 7e3 → 2.3e7 trong 1 session 450s) — root
+cause: λ=0.99 khiến ma trận P tăng không giới hạn (~148x mỗi 5s) trong các đoạn accel gần-
+phẳng (đúng finding case-b hồi trước trong session này: lying/sitting/standing có std_mag
+thấp) mà không đủ excitation để ghìm P lại — RLS "windup" kinh điển. Fix: reset P về giá trị
+ban đầu khi trace(P) vượt ngưỡng (`RLS_TRACE_RESET`), cộng re-symmetrize P mỗi bước. Sau fix,
+RLS về lại thang đo hợp lý: pooled MAE=29.83bpm (so baseline=26.95, LMS=26.96) — RLS thắng
+nhiều participant hơn (3/5: P03/P16/P17) nhưng thua đậm ở P04 (46.06) kéo trung bình xuống.
+Không kết luận thuật toán nào thắng rõ ràng — cả 3 vẫn quanh 27-30bpm, chưa đủ chính xác lâm
+sàng. Còn Wiener (bước cuối trong so sánh 3 thuật toán) chưa làm — [[project-next-session]].
+
+## 2026-07-28 — `lms_denoise_mvp.py` mở rộng ra 5 participant: LMS KHÔNG thắng nhất quán (pooled MAE gần như hoà)
+Sau khi sửa peak-detection qua 3 vòng (range-gate → spectral FFT → continuity-tracking
++ burn-in — xem entry trước) và thấy LMS thắng rõ trên P02 (24.0 vs 29.6 bpm MAE), chạy
+tiếp trên cả 5 participant dual-PPG (P02/P03/P04/P16/P17, refactor `run_pipeline()` tái
+dùng theo participant thay vì hardcode 1 người). **Kết quả P02 KHÔNG generalize**: pooled
+MAE baseline=26.95 vs LMS=26.96 — gần như hoà. 3/5 participant LMS giúp (P02/P04/P16),
+2/5 làm tệ hơn (P03/P17). Theo activity: LMS giúp lying/walking, hại sitting/running.
+**Kết luận trung thực cho giai đoạn này:** với NLMS tham số hiện tại (8 tap, mu=0.5) +
+pipeline BPM hiện tại (vẫn còn sai 20-35bpm, chưa đủ tin cậy tuyệt đối), chưa thể kết
+luận LMS có lợi ích nhất quán qua participant. Không phải thất bại của thí nghiệm — đây
+đúng là lý do phải test nhiều người thay vì tin 1 kết quả đơn lẻ — nhưng means bài báo
+Q3 chưa có câu chuyện "LMS thắng" để viết, cần RLS/Wiener so sánh thêm hoặc debug sâu
+hơn per-participant (P03/P17 tệ hơn — vì sao khác P02/P04/P16?) trước khi kết luận.
+
+## 2026-07-28 — Bắt đầu track LMS/RLS/Wiener: `lms_denoise_mvp.py` (P02, LMS only) — peak-detection CHƯA đủ tin cậy
+MVP đầu tiên cho research track: resample raw wrist/fingertip/accel (P02, keyed bằng
+`elapsed_ms`) lên grid chung 100Hz, bandpass 0.7-3.5Hz, peak-detect để tính BPM tức thời,
+so BPM lỗi (MAE) giữa baseline (wrist thô) và NLMS (accel làm reference) theo từng activity.
+**Kết quả chưa dùng được:** sanity-check ground-truth (fingertip) so với cột `bpm` on-device
+cho thấy BPM tức thời nhảy phi thực tế (53→125→133→18.5 bpm liên tiếp lúc đang nằm yên) — đã
+thêm 1 lớp lọc range sinh lý (40-180bpm) trong `instantaneous_bpm()`, cải thiện nhẹ (baseline
+MAE 24.1→21.4bpm) nhưng KHÔNG đủ — MAE tổng vẫn >20bpm, quá cao để tin. Quyết định: **peak-
+detection method cần làm lại (khác hẳn heuristic prominence-threshold hiện tại) trước khi so
+sánh LMS/RLS/Wiener** — không phải bug riêng của LMS, filter nào cũng cần ground-truth này.
+Dừng ở đây theo đúng nguyên tắc anti-rabbit-hole, không tiếp tục vá tham số — [[project-next-session]].
+
+## 2026-07-28 — Thêm bước pipeline mới: `train_activity_classifier.py` → `models/activity_classifier.pkl`
+Pipeline giờ có thêm 1 bước sau `data/processed/`: train 5-class DecisionTree (LOGO-CV,
+N=17) và export model ra `models/activity_classifier.pkl`, tái chạy được bất cứ lúc nào,
+không sửa tay. Kết quả: mean accuracy 0.547/17-fold, lying/sitting/standing confuse nặng
+(lying recall 0.283 — đúng root cause bug-1 đã đóng: magnitude không mang thông tin hướng
+đeo), walking/running tách tốt (0.639/0.771). Đây là kết quả cuối cùng được báo cáo trung
+thực, không phải bug cần vá tiếp — [[project-next-session]].
+Riêng track LMS/RLS/Wiener: check nhanh `std_mag` (`check_accel_variance_by_activity.py`)
+cho thấy accel reference lúc static (lying/sitting/standing) KHÔNG phẳng tuyệt đối, chỉ thấp
+hơn dynamic ~15x (median) — không lo RLS mất ổn định số học, nhưng nên tách báo cáo
+static/dynamic riêng khi so sánh 3 thuật toán lọc, đừng gộp chung.
+
 File này **không phải** thay cho `git log` — git log ghi từng dòng code đổi gì,
 còn file này chỉ ghi lại những chỗ **hợp đồng giữa 2 phần** của hệ thống bị đổi
 (schema data, giao thức giữa firmware/script, kiến trúc chuyển transport, v.v.) —

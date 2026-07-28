@@ -160,11 +160,11 @@ This device delivers comparable monitoring capability at ~$20–30 in components
 
 | Milestone | Week | Status |
 | :--- | :--- | :--- |
-| M1: FreeRTOS 4-task + BLE advertising | End of week 2 | In progress |
-| M2: BLE streaming + dataset ≥ 10 subjects | End of week 4 | Not started |
-| M3: TFLite Micro INT8 deployed | End of week 7 | Not started |
-| M4: LMS adaptive filter implemented + benchmarked | End of week 7 | Not started |
-| M5: Fingertip vs wrist experiment complete | End of week 8 | Not started |
+| M1: FreeRTOS 4-task + BLE advertising | End of week 2 | In progress (not touched this session, leaving as-is) |
+| M2: BLE streaming + dataset ≥ 10 subjects | End of week 4 | Done (N=17, see `data/processed/master_dataset.csv`) |
+| M3: 5-class classifier trained + exported to firmware-ready C | End of week 7 | Done (`train_activity_classifier.py` → `export_classifier_to_c.py`; not TFLite Micro -- this project exports sklearn trees to nested if/else C directly, matching the existing `classifier.h` pattern; firmware integration still needs a human to swap it in) |
+| M4: LMS adaptive filter implemented + benchmarked | End of week 7 | Done, plus RLS + Wiener also implemented for the 3-way comparison (`lms_denoise_mvp.py`) -- result: no filter beats no-filtering consistently at N=5 (pooled MAE ~27-30bpm), see CHANGELOG.md 2026-07-28 |
+| M5: Fingertip vs wrist experiment complete | End of week 8 | Done -- this is what M4's `lms_denoise_mvp.py` run across all 5 dual-PPG participants answers |
 | M6: Full integration test | End of week 8 | Not started |
 | M7: 60-minute stability test | End of week 11 | Not started |
 | M8: CIC submission + paper draft | End of week 12 | Not started |
