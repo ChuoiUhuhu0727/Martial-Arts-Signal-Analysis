@@ -1,0 +1,81 @@
+727957,BOOT reset_reason=POWERON heap=321544
+731116,BLE: initial advertising start OK
+378247,BOOT reset_reason=POWERON heap=321544
+10920,BOOT reset_reason=OTHER heap=321544
+14293,BLE: initial advertising start OK
+12096,BOOT reset_reason=OTHER heap=321544
+15287,BLE: initial advertising start OK
+30230,BLE: client connected
+40164,BLE: client disconnected, restarting advertising
+40174,BLE: advertising restarted OK
+40375,BLE: client connected
+63069,BOOT reset_reason=OTHER heap=321544
+50625,BOOT reset_reason=OTHER heap=321544
+54228,BLE: initial advertising start OK
+68749,BLE: client connected
+194438,watchdog: PPG lost contact, firing warning beep
+197598,watchdog: PPG lost contact, firing warning beep
+200739,watchdog: PPG lost contact, firing warning beep
+204015,watchdog: PPG lost contact, firing warning beep
+207122,watchdog: PPG lost contact, firing warning beep
+210191,watchdog: PPG lost contact, firing warning beep
+213367,watchdog: PPG lost contact, firing warning beep
+216468,watchdog: PPG lost contact, firing warning beep
+219545,watchdog: PPG lost contact, firing warning beep
+222598,watchdog: PPG lost contact, firing warning beep
+225670,watchdog: PPG lost contact, firing warning beep
+228740,watchdog: PPG lost contact, firing warning beep
+231817,watchdog: PPG lost contact, firing warning beep
+234893,watchdog: PPG lost contact, firing warning beep
+238466,watchdog: PPG lost contact, firing warning beep
+241513,watchdog: PPG lost contact, firing warning beep
+244575,watchdog: PPG lost contact, firing warning beep
+247690,watchdog: PPG lost contact, firing warning beep
+250759,watchdog: PPG lost contact, firing warning beep
+253813,watchdog: PPG lost contact, firing warning beep
+256879,watchdog: PPG lost contact, firing warning beep
+259989,watchdog: PPG lost contact, firing warning beep
+263079,watchdog: PPG lost contact, firing warning beep
+266672,watchdog: PPG lost contact, firing warning beep
+269776,watchdog: PPG lost contact, firing warning beep
+272895,watchdog: PPG lost contact, firing warning beep
+275999,watchdog: PPG lost contact, firing warning beep
+279085,watchdog: PPG lost contact, firing warning beep
+282186,watchdog: PPG lost contact, firing warning beep
+285235,watchdog: PPG lost contact, firing warning beep
+288739,watchdog: PPG lost contact, firing warning beep
+291829,watchdog: PPG lost contact, firing warning beep
+294934,watchdog: PPG lost contact, firing warning beep
+298063,watchdog: PPG lost contact, firing warning beep
+301134,watchdog: PPG lost contact, firing warning beep
+304190,watchdog: PPG lost contact, firing warning beep
+307343,watchdog: PPG lost contact, firing warning beep
+310435,watchdog: PPG lost contact, firing warning beep
+313542,watchdog: PPG lost contact, firing warning beep
+317200,watchdog: PPG lost contact, firing warning beep
+320262,watchdog: PPG lost contact, firing warning beep
+323375,watchdog: PPG lost contact, firing warning beep
+326495,watchdog: PPG lost contact, firing warning beep
+329595,watchdog: PPG lost contact, firing warning beep
+332703,watchdog: PPG lost contact, firing warning beep
+335773,watchdog: PPG lost contact, firing warning beep
+338871,watchdog: PPG lost contact, firing warning beep
+341960,watchdog: PPG lost contact, firing warning beep
+345126,watchdog: PPG lost contact, firing warning beep
+348216,watchdog: PPG lost contact, firing warning beep
+351676,watchdog: PPG lost contact, firing warning beep
+354748,watchdog: PPG lost contact, firing warning beep
+357930,watchdog: PPG lost contact, firing warning beep
+361084,watchdog: PPG lost contact, firing warning beep
+364193,watchdog: PPG lost contact, firing warning beep
+367686,watchdog: PPG lost contact, firing warning beep
+370775,watchdog: PPG lost contact, firing warning beep
+373860,watchdog: PPG lost contact, firing warning beep
+376975,watchdog: PPG lost contact, firing warning beep
+380041,watchdog: PPG lost contact, firing warning beep
+383143,watchdog: PPG lost contact, firing warning beep
+386303,watchdog: PPG lost contact, firing warning beep
+389389,watchdog: PPG lost contact, firing warning beep
+392458,watchdog: PPG lost contact, firing warning beep
+395617,watchdog: PPG lost contact, firing warning beep
+134695,BOOT reset_reason=POWERON heap=321544

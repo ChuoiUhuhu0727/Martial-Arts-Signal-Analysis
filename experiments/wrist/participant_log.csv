@@ -14,3 +14,5 @@ session_2_20260714_170105.csv,2026-07-14,17:01:05,v1_fixed_order,P08,no,"confirm
 session_2_20260714_195838.csv,2026-07-14,19:58:38,v1_fixed_order,P13,no,"confirmed distinct from other 10 in this batch (assumption: also distinct from P01-P04, not directly confirmed)"
 session_3_20260714_185531.csv,2026-07-14,18:55:31,v1_fixed_order,P11,no,"confirmed distinct from other 10 in this batch (assumption: also distinct from P01-P04, not directly confirmed)"
 session_7_20260714_170112.csv,2026-07-14,17:01:12,v1_fixed_order,P09,no,"confirmed distinct from other 10 in this batch (assumption: also distinct from P01-P04, not directly confirmed)"
+session_1_20260728_183801.csv,2026-07-28,18:38:01,v1_fixed_order,P16,yes,"auto-suggested P16 as a NEW participant -- if this was actually a repeat visitor, replace with their existing ID"
+session_1_20260728_185304.csv,2026-07-28,18:53:04,v1_fixed_order,P17,yes,"auto-suggested P17 as a NEW participant -- if this was actually a repeat visitor, replace with their existing ID"
