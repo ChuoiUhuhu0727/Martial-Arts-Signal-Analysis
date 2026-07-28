@@ -29,6 +29,8 @@ SESSIONS = [
     ("valid_sessions/session_1_20260718_203817.csv", "valid_sessions/raw_accel_1_20260718_203851.csv", "P02"),
     ("valid_sessions/session_1_20260718_210037.csv", "valid_sessions/raw_accel_1_20260718_210052.csv", "P03"),
     ("valid_sessions/session_1_20260720_184050.csv", "valid_sessions/raw_accel_1_20260720_184106.csv", "P04"),
+    ("valid_sessions/session_1_20260728_183801.csv", "valid_sessions/raw_accel_1_20260728_183835.csv", "P16"),
+    ("valid_sessions/session_1_20260728_185304.csv", "valid_sessions/raw_accel_1_20260728_185338.csv", "P17"),
 ]
 
 ACTS = ["lying", "sitting", "standing", "walking", "running"]
