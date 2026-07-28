@@ -9,6 +9,19 @@ Mỗi entry chỉ 2-3 dòng: **đổi gì** + **tại sao**. Không ghi chi ti�
 
 ---
 
+## 2026-07-28 — `log_serial.py` tự phân loại session + tự đề xuất participant_id
+Sau mỗi lần retrieve, `log_serial.py` giờ tự áp rule dry-run (2026-07-22) + check độ
+đầy đủ, rồi tự dời file: dry-run → `firmware_test_fixtures/`, hoàn chỉnh → `valid_sessions/`
+kèm tự thêm 1 dòng vào `participant_log.csv`. Session cụt-nhưng-có-thật (kiểu brownout,
+không phải dry-run) **không** tự dời — để nguyên chờ quyết định salvage/bỏ bằng tay,
+vì rule không đủ để tự quyết đúng trường hợp này.
+`participant_id` của dòng mới được **tự đoán** (số P tiếp theo, giả định participant mới)
+thay vì để trống — để `build_processed_dataset.py` chạy được ngay không cần sửa tay giữa
+2 bước, đổi lại: nếu hôm đó là người quay lại lần 2 (không phải người mới), phải tự sửa lại
+ID cho đúng sau — đây là quyết định đánh đổi tốc độ lấy rủi ro sai nhỏ, chấp nhận được vì
+sửa sau dễ hơn nhiều so với dựng lại participant log từ đầu (đã từng phải làm, tốn nhiều
+công hơn hẳn).
+
 ## 2026-07-22 — Rule loại session không có activity thật; chia `experiments/wrist/` thành `valid_sessions/`/`firmware_test_fixtures/`
 Phát hiện qua plot (`session_4_20260717_163545.csv`): accel phẳng tuyệt đối suốt "running"
 (đáng lẽ phải dao động mạnh nhất) — thiết bị nằm yên trên bàn, không ai đeo, chỉ có state
