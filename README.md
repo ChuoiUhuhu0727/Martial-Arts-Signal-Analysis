@@ -186,3 +186,25 @@ This device delivers comparable monitoring capability at ~$20–30 in components
 1. Decide: collect more raw-capture sessions before choosing an orientation-feature normalization, or explore tilt-angle features on the current 4.
 2. `data/processed/` master dataset script (raw→clean from `valid_sessions/`) still not built.
 3. Decide on randomizing activity order for future collection (open question from 2026-07-22, not yet resolved either way).
+
+### 2026-07-28 — Pipeline automation, P16/P17 added (N=17), bug-1 rabbit hole closed, decided: keep 5-class
+
+**Built:**
+- `build_processed_dataset.py` — builds `data/processed/master_dataset.csv` from `valid_sessions/` + `participant_log.csv`. Adds `activity_group` (lying/sitting/standing → `stationary`, else unchanged) so either a 3-class or 5-class model can be trained without re-running this script. Outlier motion-spikes are flagged (`is_outlier_spike`) but never dropped (robust-real-world decision, 2026-07-22).
+- `log_serial.py` now auto-categorizes every retrieved session right after the quality check: dry-run → `firmware_test_fixtures/`, complete+real → `valid_sessions/` with an auto-appended `participant_log.csv` row (participant_id guessed as the next sequential P-number, assuming a new participant — verify/correct by hand if it was actually a repeat visitor). Incomplete-but-real sessions (e.g. brownout-cut) are deliberately left unfiled for manual salvage/discard review. `build_processed_dataset.py` can now run immediately after `log_serial.py` with no manual step in between.
+- `realtime_waveform_viewer.py` / `realtime_fft_viewer.py` — live Serial plotting (waveform + FFT) for a teammate's investigation, reusing the existing `firmware_capture/` protocol, no firmware changes.
+- Repo cleanup: moved deprecated/unused files to `archived/` (not deleted), removed genuinely empty build artifacts.
+
+**P16 and P17 added** (verified by hand — dry-run ratio 13.26/12.49, full fingertip PPG ~34k rows each, no BROWNOUT — not just trusted from the auto-tag) — `master_dataset.csv` now **N=17 participants**, and the LMS research track now has **5 participants with complete dual-PPG** (P02, P03, P04, P16, P17; P01's fingertip channel is empty, see 2026-07-17 note above) instead of 3.
+
+**Bug-1 re-check at N=6 (added P16/P17 to the raw-capture LOGO-CV pool) — result complicated the picture, didn't resolve it:** adding these 2 participants to the training pool made P04's accuracy *worse* under the raw-enhanced feature (62.2% → 35.0%), and P16 was the worst performer under the relative-baseline variant (29.6%, worse than plain baseline). This is evidence the wearing-orientation issue may need a genuinely different feature (tilt angle) or a calibration-step protocol change, not more attempts at re-deriving orientation from already-collected, uncalibrated data.
+
+**Advisor suggested an alternative:** train an AI model (PPG+IMU → HR end-to-end, or a PPG denoising/reconstruction model) deployed to the ESP32, instead of the classical LMS/RLS/Wiener comparison. Assessment: promising idea, but end-to-end learned models for PPG→HR typically need far more participants to generalize than classical adaptive filters do (literature benchmarks like PPG-DaLiA use ~15 participants; this project has 5 with usable dual-PPG) — recommended keeping the classical-filter comparison as the main plan (fits current data) and treating the AI-model idea as an added comparison point for later, not a replacement, given the project's current data constraints.
+
+**Decision reached — closing the bug-1 rabbit hole:** after 3 feature variants tried across growing N (4→6) with no clean generalizing winner, further feature-engineering attempts on the *existing* data were recognized as an open-ended rabbit hole and deliberately stopped. **Keeping 5-class** (not collapsing to 3-class) — but bug 1 is no longer a blocker: train the 5-class classifier now with the current feature set, report the lying/sitting/standing confusion matrix honestly as a discussed, root-caused finding (magnitude-based features structurally can't carry orientation information), not something to keep patching before moving forward. The calibration-step protocol idea is parked as a future firmware/protocol change for *new* data collection only — it doesn't apply retroactively to the 17 already-collected sessions.
+
+**Next session:**
+1. Actually train the 5-class classifier on `master_dataset.csv` (LOGO-CV, N=17) — first real trained model, not just a feature-validity check. Report the confusion matrix as-is.
+2. Proceed with the LMS/RLS/Wiener research track using the 5 dual-PPG participants — separate effort from the activity classifier.
+3. AI-model idea (advisor's suggestion) — parked, revisit only if there's time/data left after the above.
+4. Still open, not urgent: randomizing activity order for future collection (2026-07-22); calibration-step protocol change (2026-07-28) — both are *future data collection* changes, neither blocks current work.
