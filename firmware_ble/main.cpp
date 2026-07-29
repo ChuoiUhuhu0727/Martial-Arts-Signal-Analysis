@@ -69,7 +69,7 @@
 #include <LittleFS.h>
 #include "esp_system.h"
 #include "MAX30105.h"
-#include "classifier.h"
+#include "activity_classifier_5class.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -91,7 +91,6 @@
 #define PPG2_SCL_PIN   2   // D1
 #define WINDOW_SIZE    60
 #define STRIDE_SIZE    10
-#define ACTIVITY_GATE  150.0f    // bỏ qua window yên tĩnh (rest≈7, walk≈200–800)
 
 // Live PPG contact — how long without a good IR sample before a row is
 // marked "contact lost". Shared by the watchdog buzzer AND the per-row
@@ -223,7 +222,7 @@ struct RawPpgSample {
 };
 
 struct OutputResult {
-    int   activity_class;  // 0 = normal, 1 = intense
+    int   activity_class;  // 0=lying, 1=running, 2=sitting, 3=standing, 4=walking (see activity_classifier_5class.h)
     float bpm;
     float mean_mag;
     float std_mag;
@@ -702,7 +701,7 @@ static void task_raw_writer(void* arg) {
 
 // -----------------------------------------------------------------------
 // TASK 3: CLASSIFIER
-// Nhận IMU → sliding window → feature extraction → classifySignal()
+// Nhận IMU → sliding window → feature extraction → classifyActivity5class()
 // Drain PPG queue → beat detection → BPM
 // Đẩy OutputResult vào output_queue
 // -----------------------------------------------------------------------
@@ -754,9 +753,11 @@ static void task_classifier(void* arg) {
                 // eventually fills its buffer and further Serial writes block
                 // forever — silently freezing this task when running untethered.
                 if (Serial) Serial.printf(">acc_std:%.1f|mean:%.1f\n", acc_std, meanMag);
-                result.activity_class = (acc_std >= ACTIVITY_GATE)
-                                      ? classifySignal(peak_max, acc_std, peak_rel)
-                                      : 0;
+                // Unconditional -- unlike the old binary model, low acc_std is exactly
+                // when this model needs to run (that's how it tells lying/sitting/standing
+                // apart); the old ACTIVITY_GATE short-circuit would force every quiet
+                // window to class 0 (lying) regardless of the real posture.
+                result.activity_class = classifyActivity5class(meanMag, acc_std, peak_rel, peak_max);
                 result.bpm      = currentBPM;
                 result.mean_mag = meanMag;
                 result.std_mag  = acc_std;
