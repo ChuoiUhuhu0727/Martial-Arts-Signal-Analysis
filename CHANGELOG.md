@@ -1,5 +1,39 @@
 # Changelog — quyết định ở mức boundary/interface
 
+## 2026-07-29 — Test firmware_ble model 5-class trên hardware thật + loại session test khỏi dataset
+Flash `firmware_ble` (đã sửa 2026-07-28) lên board thật, thu 1 session để kiểm tra
+`activity_class` có hoạt động đúng không. Kết quả: running (99%) và standing (76%) live
+chính xác, thậm chí tốt hơn LOGO-CV offline; lying/sitting vẫn bị nhầm nặng sang standing —
+**đúng hướng nhầm đã thấy trong confusion matrix lúc train** (không phải bug integration
+mới, confirm đúng bug-1 đã root-cause). Riêng đoạn "walking" bị đoán thành standing 95% —
+điều tra ra không phải bug: participant thực ra đứng yên đeo lại sensor lúc đó, không đi bộ
+thật (std_mag đo được ~23, thấp hơn 10 lần so với walking lúc train ~265) — không phải finding
+thật, do lỗi thực hiện protocol.
+**Loại session này khỏi dataset**: chuyển 4 file (`session_2_20260729_112314.csv` +
+raw_accel/raw_ppg/raw_ppg2 đi kèm) từ `valid_sessions/` sang `firmware_test_fixtures/`, xoá
+dòng `P18` khỏi `participant_log.csv` — vì mục đích thu là test firmware, không phải data
+thật, và đoạn walking không hợp lệ. **Gap phát hiện**: `log_serial.py` auto-file hiện không
+phân biệt được "session thu thật" với "session thu để test code" — session hoàn chỉnh nào
+cũng bị tự gán participant_id mới. Chưa sửa auto-filer (ngoài phạm vi hôm nay), chỉ dọn tay
+lần này — nếu việc này lặp lại thường xuyên, cân nhắc thêm 1 flag thủ công lúc thu.
+
+## 2026-07-28 — `firmware_ble` chuyển sang model 5-class thật (đổi ý nghĩa field `activity_class`)
+Trước đó chỉ export `activity_classifier_5class.h` ra chứ chưa gắn vào firmware nào — vịt
+flash thử mới phát hiện `main.cpp` vẫn gọi `classifySignal()` (model binary cũ) không đổi gì.
+Giờ sửa `firmware_ble/main.cpp`: đổi `#include "classifier.h"` → `#include "activity_classifier_5class.h"`
+(copy file vào `firmware_ble/` vì PlatformIO include theo thư mục cục bộ, không phải path chung),
+đổi call site sang `classifyActivity5class(meanMag, acc_std, peak_rel, peak_max)`. **Field
+`activity_class` trong BLE JSON payload + session CSV đổi ý nghĩa: trước là binary (0=normal,
+1=intense), giờ là 0=lying/1=running/2=sitting/3=standing/4=walking** — đã check `log_ble.py`/
+`log_serial.py`/`visualize_session.py`, không ai diễn giải giá trị này theo nghĩa binary (chỉ
+pass-through), nên không cần sửa gì phía Python. Cũng **xoá bỏ `ACTIVITY_GATE`** (150.0f
+threshold ép activity_class=0 khi acc_std thấp) — logic này đúng cho model binary cũ ("đứng
+yên = normal") nhưng SAI cho model 5-class (đứng yên chính là lúc cần phân biệt lying/sitting/
+standing, ép về 0 sẽ luôn báo "lying" bất kể tư thế thật). Model cũ (`classifier.h`) vẫn còn
+file trong `firmware_ble/` nhưng không còn được include — giữ lại làm tham chiếu, không xoá.
+Chỉ áp dụng cho `firmware_ble` — `firmware_main`/`firmware_baseline_evaluate` chưa đụng tới,
+vẫn dùng model binary cũ.
+
 ## 2026-07-28 — Export model 5-class sang C (`activity_classifier_5class.h`) + cập nhật milestone README
 `export_classifier_to_c.py` đọc `models/activity_classifier.pkl`, sinh code C if/else lồng
 nhau y hệt pattern đã có sẵn ở `classifier.h` (3 firmware hiện tại dùng cách này, KHÔNG phải
