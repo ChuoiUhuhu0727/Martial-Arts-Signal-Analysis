@@ -1,5 +1,10 @@
 # Adaptive Filter Comparison for Wrist-Worn PPG Motion Artifact Removal — Preliminary Results
 
+**NOT FOR SUBMISSION.** This is a Claude-written reference draft — useful for checking
+numbers/methodology, but the analysis/writing is Claude's, not Giang's. The actual
+report deliverable is `adaptive_filter_comparison_OUTLINE.md` (fill in yourself), same
+academic-integrity boundary as the activity-classifier report.
+
 Status: MVP-phase result, ready to incorporate into the Q3 journal draft. Not a final
 result — see Limitations.
 
