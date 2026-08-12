@@ -167,7 +167,7 @@ This device delivers comparable monitoring capability at ~$20–30 in components
 | M5: Fingertip vs wrist experiment complete | End of week 8 | Done -- this is what M4's `lms_denoise_mvp.py` run across all 5 dual-PPG participants answers |
 | M6: Full integration test | End of week 8 | Not started |
 | M7: 60-minute stability test | End of week 11 | Not started |
-| M8: CIC submission + paper draft | End of week 12 | Not started |
+| M8: CIC submission + paper draft | End of week 12 | In progress — both report outlines (`paper/activity_classifier_report_OUTLINE.md`, `paper/adaptive_filter_comparison_OUTLINE.md`) fully filled in, not yet submitted anywhere |
 | M9: Final demo | End of week 13 | Not started |
 
 ---
@@ -232,3 +232,47 @@ This device delivers comparable monitoring capability at ~$20–30 in components
 3. LMS/RLS/Wiener: decide between (a) accept the null/mixed result and move to paper framing, (b) richer-reference experiment already tried and failed (don't retry triaxial without more data/session-length first), (c) investigate P04 correlation further (not blocking).
 4. Activity classifier: if pursuing >85.3%/>0.548, next real lever is gyroscope + a calibration-step protocol change for *future* data collection (can't retrofit onto the 18 already-collected participants) — not another feature-engineering pass on existing data.
 5. Still open, not urgent: randomizing activity order (2026-07-22).
+
+### 2026-08-12 — Both report outlines completed; project docs restructured into per-week files
+
+**Subsystem A (`paper/activity_classifier_report_OUTLINE.md`) — all 5 sections filled in.**
+Section 1 (LOGO-CV definition + why per-class recall matters more than the 0.548 average)
+written entirely by Giang, derived through Socratic Q&A. Section 2 (what the 4 features
+measure, why magnitude is rotation-invariant, why the 3 earlier per-axis attempts didn't
+generalize) is a mix — Giang wrote the feature redefinitions and the 3-alternatives
+narrative, Claude fixed a scope error (features are computed per 2.4s window, not per
+90s activity segment — `WINDOW_SIZE=60` @ `IMU_HZ=25`) and filled two flagged gaps
+(rotation-invariance formula; disproving the "wrist-flip" hypothesis for Alternative 1
+using the real 68.2%/P03-46.8% numbers, since the hypothesis can't explain why only P03
+failed). Sections 3-5 written directly by Claude at Giang's explicit request (not
+Socratic this time) — added a real majority-class baseline computed via new script
+`check_majority_baseline.py` (5-class baseline 0.201 ≈ random; 3-class baseline 0.599,
+since `stationary` absorbs 3/5 original classes) showing the raw 0.548→0.853 comparison
+overstates the improvement; Giang's own two-layer model idea (gyro for the static
+classes, keep the existing decision tree for walking/running) captured as a cheaper
+alternative to the gyro+calibration proposal.
+
+**Subsystem B (`paper/adaptive_filter_comparison_2026-07-28.md`) converted to an
+outline**, same academic-integrity treatment as subsystem A (Giang confirmed subsystem
+B's report is also graded, not just a free-standing writeup as originally assumed). Old
+full Claude-written draft renamed to `..._CLAUDE_REFERENCE.md`, marked NOT FOR
+SUBMISSION, kept only as a numbers/methodology reference. New
+`paper/adaptive_filter_comparison_OUTLINE.md` has the same tables/numbers, prompts
+instead of analysis.
+
+**Docs restructured — split by week, doesn't affect code:**
+- New `paper/weekly_reports/week_05.md`…`week_13.md` — retrospective "what was actually
+  done, what the results mean" reports (not plans), reconstructed from git log +
+  `CHANGELOG.md` + this Progress Log, compressed by content into the 9 week-labels since
+  real commit activity only spans ~5 calendar weeks (2026-06-27 → 2026-08-01) against the
+  original 9-week span. Written for a non-technical advisor — each bullet has a plain-
+  language "Ý nghĩa" (significance) explanation alongside the technical one.
+
+**Next session:**
+1. PR #25 still needs checking (see 2026-07-30 entry) — may already be merged, verify.
+2. Giang to do a final read-through of `activity_classifier_report_OUTLINE.md` sections
+   3-5 (Claude-authored) before submitting — confirm understanding well enough to explain
+   to the advisor, per the outline's own reproducibility checklist.
+3. Pending fact-check from 2026-08-12 session (not yet confirmed): does every participant
+   wear the watch in the same fixed orientation? If true, may reopen part of the bug-1
+   wearing-angle-confound explanation — do not act on this until Giang confirms.
