@@ -1,5 +1,19 @@
 # Changelog — quyết định ở mức boundary/interface
 
+## 2026-08-15 — Ground truth nhịp tim bị bác bỏ và thay bằng estimator v2
+`spectral_bpm()` trong `lms_denoise_mvp.py` bám vào subharmonic (P17 lúc chạy: báo 77 bpm
+trong khi đếm tay ra 156), rồi `MAX_JUMP_BPM=25` khoá cứng sai số đó lại — nên **mọi con số
+MAE của research track đều đo bằng thước hỏng**. Thay bằng `hr_estimator_v2.py`: đo trung vị
+khoảng cách đỉnh trong miền thời gian, trả về NaN khi nhịp quá không đều, bỏ ràng buộc liên
+tục. Đây là đổi hợp đồng dữ liệu: ground truth giờ **có thể vắng mặt**, mọi script tiêu thụ
+nó phải xử lý NaN thay vì giả định luôn có giá trị.
+
+## 2026-08-14 — check_majority_baseline.py tính baseline trên sai tập dòng
+Script này tính baseline trên toàn bộ 20.258 dòng, trong khi `train_activity_classifier.py`
+train/eval trên 16.880 dòng đã lọc `is_transition == 1` — hai con số đem so với nhau nhưng
+mô tả hai tập dữ liệu khác nhau. Đã thêm bộ lọc cho khớp; kết luận không đổi (baseline
+0.2007→0.2006 và 0.5991→0.5995, biên vượt baseline vẫn +0.347 / +0.254).
+
 ## 2026-07-29 — Test firmware_ble model 5-class trên hardware thật + loại session test khỏi dataset
 Flash `firmware_ble` (đã sửa 2026-07-28) lên board thật, thu 1 session để kiểm tra
 `activity_class` có hoạt động đúng không. Kết quả: running (99%) và standing (76%) live

@@ -1,26 +1,58 @@
 """
-Train the 5-class activity classifier (lying/sitting/standing/walking/running) on
-data/processed/master_dataset.csv and export it. Also reports the 3-class
-(stationary/walking/running, via the activity_group column) LOGO-CV accuracy for
-comparison -- see CHANGELOG.md 2026-07-30 for why this second number matters: it's
-the same model/features/data, just regrouped to match what the feature set can
-actually support, and it's the "solution C" step of the classifier finding's story
-(finding: 54.7% 5-class -> root cause: magnitude can't carry orientation info ->
-regroup to 3-class -> 85.3%). Previously this comparison was run ad hoc in a chat
-session with no saved script -- folded into this file so it's reproducible from a
-single command instead of unable to be shown to anyone.
+Main evidence script for the activity-classifier report (Sections 1, 3 and 4).
 
-Uses DecisionTreeClassifier(max_depth=5, min_samples_leaf=5) -- same model/hyperparams
-already validated in logo_cv_activity_features.py, kept consistent rather than
-introducing a new model choice at export time.
+WHAT IT DOES
+    Evaluates the same decision-tree model on the same data twice, changing
+    exactly one thing: how the activity labels are grouped.
+        (1) 5-class : lying / sitting / standing / walking / running  -> 0.548
+        (2) 3-class : stationary / walking / running                  -> 0.853
+    Then trains the final 5-class model on all participants and exports it for
+    deployment to the wearable's firmware.
 
-bug-1 (see CHANGELOG.md / project memory 2026-07-28) is a CLOSED rabbit hole: magnitude
--based features can't carry orientation info, so lying/sitting/standing confusion in the
-5-class LOGO-CV report below is an expected, root-caused finding -- report it honestly,
-it is not a blocker and not something to re-investigate here.
+    Because the model, hyperparameters, features, dataset and evaluation
+    procedure are held identical between (1) and (2), the difference between the
+    two accuracies is attributable to the label grouping alone. That is the
+    controlled comparison the report's "Solution (C)" section rests on.
 
-Usage:
+EVALUATION: LOGO-CV (leave-one-participant-out)
+    Each of the 18 participants is held out in turn: the model trains on the
+    other 17 and is tested on the held-out person, and the reported accuracy is
+    the mean over all 18 folds. This is stricter than a random train/test split,
+    which would put windows from the same person in both sets and let the model
+    score well by memorising individuals. The numbers here therefore estimate
+    performance on a NEW user the model has never seen.
+
+MODEL
+    DecisionTreeClassifier(max_depth=5, min_samples_leaf=5, random_state=0).
+    Depth is capped deliberately: with only 4 features and 18 participants, an
+    unconstrained tree overfits individuals, which is precisely what LOGO-CV is
+    designed to expose. random_state=0 makes every run reproducible.
+
+FEATURES (all four derived from accelerometer magnitude)
+    mean_mag, std_mag, peak_rel, peak_max -- computed on-device over a 2.4 s
+    sliding window (60 samples at 25 Hz, stride 0.4 s); see
+    firmware_ble/main.cpp:738-750 for the on-device implementation.
+
+INPUT / OUTPUT
+    in : data/processed/master_dataset.csv  (built by build_processed_dataset.py)
+    out: models/activity_classifier.pkl     (5-class model, all 18 participants)
+
+ROW SELECTION
+    Transition rows (is_transition == 1) are excluded -- these are the ~15 s
+    while a participant changes posture, where the recorded label does not yet
+    describe what the body is doing. Left in, they would inject mislabelled data
+    into both training and testing.
+
+USAGE
     python train_activity_classifier.py
+
+READING THE OUTPUT
+    Per-class recall matters more than the mean accuracy: the 5-class model is
+    not uniformly mediocre, it fails on specific classes. `lying` at 0.284 is
+    barely above chance (0.20) while `running` reaches 0.782, and the pooled
+    confusion matrix shows the errors concentrated among the three static
+    postures. Section 2 of the report explains why -- magnitude is invariant to
+    rotation, and those three postures differ only by orientation.
 """
 import numpy as np
 import pandas as pd

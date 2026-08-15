@@ -1,9 +1,32 @@
 """
-Build data/processed/master_dataset.csv from experiments/wrist/valid_sessions/.
+Data provenance for the activity-classifier report: builds the training dataset.
 
-Reproducible raw -> processed step: never edit valid_sessions/ by hand, never edit
-the output by hand — re-run this script instead. Applies the cleaning decisions
-already made and documented in CHANGELOG.md (2026-07-22 entries):
+WHAT IT DOES
+    Reads the raw per-session recordings in experiments/wrist/valid_sessions/
+    (one CSV per participant, written by the device itself) and merges them into
+    the single table every analysis script reads:
+        data/processed/master_dataset.csv   (20,258 rows, 16,880 after excluding
+                                             transitions; 18 participants)
+
+WHY THIS SCRIPT EXISTS
+    It makes the raw -> processed step reproducible and auditable. The raw
+    session files are never edited by hand and the output is never edited by
+    hand: to change how the dataset is built, you change this script and re-run
+    it. Anyone can therefore regenerate the exact training data from the
+    original device recordings.
+
+    It also adds no measurements of its own -- the four features were computed
+    on-device during recording (see firmware_ble/main.cpp:738-750). This script
+    only joins, labels and flags.
+
+WHAT IT ADDS TO EACH ROW
+    participant_id      from experiments/wrist/participant_log.csv
+    activity_group      lying/sitting/standing -> "stationary", others unchanged;
+                        lets the 5-class and 3-class models be trained from the
+                        same file without rebuilding it
+    is_outlier_spike    flag only, never a filter (see below)
+
+Cleaning decisions applied here, as documented in CHANGELOG.md (2026-07-22):
   - Dry-run/no-motion sessions are already excluded structurally (this script only
     reads valid_sessions/, never firmware_test_fixtures/).
   - Transition buffer (15s) is kept as-is, no change — preserved as the existing
