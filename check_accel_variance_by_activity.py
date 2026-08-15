@@ -1,16 +1,41 @@
 """
-Case (b) risk check for the LMS/RLS/Wiener track: is the accel signal too flat
-during static postures (lying/sitting/standing) to be a useful noise reference
-for adaptive filtering, compared to dynamic activities (walking/running)?
+Supporting evidence for the activity-classifier report, Section 2 (root cause).
 
-Uses std_mag from data/processed/master_dataset.csv -- the windowed std of accel
-magnitude already computed on-device -- as a fast proxy for reference-signal
-energy. Not a substitute for inspecting the actual raw waveform the filter would
-use, but cheap enough to answer "is there a real problem here" before designing
-anything (see CHANGELOG.md for the related 2026-07-22 no-motion-session rule,
-same underlying metric).
+QUESTION THIS ANSWERS
+    How much motion energy does each activity actually produce, as measured by
+    std_mag (the windowed standard deviation of accelerometer magnitude)? This
+    is the quantity the classifier's features are built on, so it shows directly
+    which activities the feature set CAN separate and which it cannot.
 
-Usage:
+WHAT THE OUTPUT SHOWS
+    Static postures cluster tightly together (median std_mag ~17-32) while the
+    dynamic activities sit an order of magnitude higher (walking ~269, running
+    ~1410) -- a dynamic/static ratio of roughly 15x. That gap is why
+    walking and running are classified reliably. Inside the static group there
+    is no comparable gap, which is the measured counterpart to the mathematical
+    argument in the report: magnitude is invariant to rotation, and
+    lying/sitting/standing differ from each other only by orientation.
+
+    The per-participant table is included because a pooled median can hide an
+    individual whose "static" recordings were not actually still. Every
+    participant shows the same static-vs-dynamic separation, so the effect is a
+    property of the measurement, not an artefact of a few sessions.
+
+    The final breakdown shows the three static postures do differ slightly in
+    median (sitting 17.6 < standing 25.3 < lying 31.9), but their spreads
+    (std 64-95) overlap far too heavily for that ordering to separate them.
+
+INPUT
+    data/processed/master_dataset.csv  (built by build_processed_dataset.py)
+    Transition rows are excluded, matching train_activity_classifier.py.
+
+SECOND USE
+    The same numbers answer a question for the PPG adaptive-filtering track:
+    whether the accelerometer signal during static postures is too flat to serve
+    as a motion-noise reference. That is a separate investigation and is not
+    part of this report.
+
+USAGE
     python check_accel_variance_by_activity.py
 """
 import pandas as pd
