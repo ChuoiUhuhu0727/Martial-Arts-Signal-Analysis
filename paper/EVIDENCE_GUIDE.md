@@ -201,3 +201,24 @@ Nêu ra để tránh bị hiểu quá phạm vi:
 Chú thích trong code viết bằng tiếng Anh (thống nhất với toàn bộ repo và với
 thông lệ chung của mã nguồn), còn báo cáo và tài liệu hướng dẫn này viết bằng
 tiếng Việt.
+
+---
+
+## Phụ lục — Hình dạng sóng của Subsystem A
+
+`plot_waveform_to_features.py` sinh 4 hình cho phần "dạng sóng đầu vào → 4 đặc trưng"
+trong báo cáo Subsystem A:
+
+```bash
+python plot_waveform_to_features.py
+```
+
+| Hình | Cho thấy |
+| :--- | :--- |
+| `waveform_to_features.png` | Một cửa sổ 2.4s được quy về 4 con số như thế nào |
+| `waveform_by_activity.png` | Dạng sóng thô của cả 5 hoạt động, cùng thang đo |
+| `waveform_static_zoom.png` | Ba tư thế tĩnh phóng to riêng — vẫn không phân biệt được |
+| `features_by_activity.png` | Phân bố 4 đặc trưng trên 4.538 cửa sổ của 5 participant |
+
+Script cần các file `raw_accel_*.csv` trong `experiments/wrist/valid_sessions/` — chỉ 5
+participant có raw capture, nên các hình này dựa trên 5 người đó chứ không phải cả 18.

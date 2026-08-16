@@ -98,6 +98,61 @@ dòng dữ liệu, mỗi dòng là một cửa sổ 2.4s, chứ không phải m�
 này thiên về bài toán **fall detection** (phát hiện té ngã) hơn là phân biệt tư
 thế — ở bài toán hiện tại nó không đóng góp nhiều.
 
+Hình dưới đây theo dõi trọn vẹn một cửa sổ, từ dạng sóng thô đến bốn con số được
+đưa vào model:
+
+![Một cửa sổ 2.4 giây lúc đi bộ. Đường ngang là mean_mag, dải tô là ±std_mag, tam giác đỏ là peak_max, và peak_rel là tỉ số giữa hai đại lượng đó.](figures/waveform_to_features.png)
+
+### Dạng sóng đầu vào của cả 5 hoạt động
+
+Đây là tín hiệu thô mà thiết bị thực sự nhận được, cùng một thang đo cho cả năm
+hoạt động:
+
+![Gia tốc thô của 5 hoạt động trên cùng thang đo. Ba tư thế tĩnh gần như là ba đường thẳng không phân biệt được; đi bộ có gợn nhỏ; chạy có biên độ lớn gấp nhiều lần.](figures/waveform_by_activity.png)
+
+Có một chi tiết trong hàng `mean_mag` đáng dừng lại: **lying 1852 · sitting 1825 ·
+standing 1815 · walking 1820**. Bốn hoạt động, bốn tư thế cơ thể hoàn toàn khác
+nhau, nhưng độ lớn gia tốc trung bình gần như **y hệt nhau** — tất cả đều xấp xỉ
+1g, tức là **trọng lực**.
+
+Đó chính là biểu hiện số học của lập luận ở phần sau: khi cơ thể đứng yên, thứ duy
+nhất cảm biến đo được là vector trọng lực. Xoay cổ tay đi đâu thì vector đó đổi
+*hướng*, nhưng **độ dài của nó không đổi** — và `mean_mag` chỉ đo độ dài. Không
+phải model học kém; thông tin phân biệt ba tư thế đã bị xoá ngay tại phép tính này.
+
+Phóng to riêng ba tư thế tĩnh, mỗi hình một thang đo riêng để loại bỏ ảnh hưởng
+của biên độ, thì vẫn không có gì để bám vào:
+
+![Ba tư thế tĩnh, mỗi hình tự co giãn theo thang đo riêng. Kể cả khi đã phóng to, ba dạng sóng vẫn không có đặc điểm nào phân biệt được với nhau.](figures/waveform_static_zoom.png)
+
+### Bốn đặc trưng đó phân bố ra sao trên toàn bộ dữ liệu
+
+Hình trên chỉ là một participant. Tính đủ 4 đặc trưng trên mọi cửa sổ của cả 5
+participant có raw capture (4.538 cửa sổ):
+
+![Phân bố 4 đặc trưng theo hoạt động. Ba lớp tĩnh chồng nhau ở cả bốn đặc trưng; chỉ walking và running tách ra, và chỉ nhờ std_mag, peak_max, peak_rel.](figures/features_by_activity.png)
+
+| Hoạt động | `mean_mag` | `std_mag` | `peak_max` | `peak_rel` |
+| :--- | ---: | ---: | ---: | ---: |
+| lying | 2000.40 | 42.84 | 2093.68 | 1.07 |
+| sitting | 1828.01 | 16.04 | 1928.99 | 1.02 |
+| standing | 1896.03 | 36.61 | 1972.90 | 1.05 |
+| walking | 1937.09 | 260.17 | 2693.15 | 1.37 |
+| running | 2589.27 | 1639.95 | 7504.38 | 2.69 |
+
+*(trung vị, gộp mọi participant có raw capture)*
+
+Đọc bảng này theo hàng dọc thì thấy rõ vấn đề. Ba hàng đầu — ba lớp mà model nhầm
+lẫn nặng nhất — có bộ bốn con số gần như trùng khít: `peak_rel` là 1.07 / 1.02 /
+1.05, `mean_mag` đều quanh 1900. Với model, ba tư thế đó **là cùng một điểm** trong
+không gian đặc trưng.
+
+Ngược lại, walking và running tách ra được, nhưng chỉ nhờ `std_mag` (260 và 1640 so
+với dưới 43) và `peak_max`. Đáng chú ý: `mean_mag` của walking là 1937 — **nằm lọt
+giữa** lying (2000) và standing (1896), nên riêng đặc trưng này còn không tách nổi
+walking khỏi nhóm tĩnh. Toàn bộ khả năng phân biệt của bộ đặc trưng nằm ở chỗ đo
+*mức dao động*, không phải *độ lớn*.
+
 ### Cơ chế: magnitude bất biến với phép xoay
 
 Magnitude được tính là:
