@@ -1,72 +1,55 @@
-# Week 10 Report — Comparing three noise-removal methods for the heart signal
-
-> ⚠️ **THIS WEEK'S CONCLUSION WAS LATER OVERTURNED — see [Week 13](week_13.md)**
->
-> The four numbers published this week were measured against a heart rate derived from the
-> fingertip sensor. On 15 August that reference channel was found to be **wrong by a factor
-> of two for 3 of the 5 participants** because of an algorithm fault, so all four numbers
-> were measured with **a bent ruler** and cannot be used to draw a conclusion.
->
-> This week's content is **kept as it was, not rewritten**. A confident conclusion later
-> overturned by the team itself is part of the research process, and is direct evidence for
-> the argument in Chapter 5 section 5.3 of the thesis.
+# Week 10 Report — The noise-removal research track, and the discovery that overturned it
 
 ## What this week was about — the overview
 
-**Phase:** Phase 3 — *Polish and Documentation* (Weeks 10–13). Matches milestones **M4**
-and **M5** in the plan.
+**Phase:** Phase 3 — *Polish and Documentation*, the final week of the project. Matches
+milestones **M4** and **M5**.
 
-**In one sentence:** building and running the project's **separate research track** — a
-comparison of three noise-removal algorithms to see which measures wrist heart rate best.
+**In one sentence:** building and running the project's own research track — a comparison of
+three noise-removal algorithms — and then, while writing the final report, **discovering that
+the ruler used to mark them was wrong by a factor of two**, forcing a complete redo.
 
-**Why it matters:** this is the *research* part, as distinct from the *product* part.
-Activity recognition (Weeks 5–9) is a feature users can see. This part answers an open
-question that nobody has answered on hardware this cheap.
+**Why it matters:** this is the most important week of the project. Not because a feature was
+added, but because a result that seemed finished turned out to be unusable — and was
+corrected in time.
+
+> **Why did the fault surface exactly while writing the report?** Because writing forces you
+> to explain every number to someone else. And to explain a number you have to ask yourself
+> *where it came from and whether it makes sense* — a question nobody asked during the
+> earlier weeks, because everything appeared to be running smoothly.
 
 ---
 
-## How the experiment was set up
+## Part 1 — Setting up the three-algorithm comparison
 
 ![Figure 10.1: The wrist signal is mixed with movement noise. All three algorithms use the motion sensor to guess the noise and subtract it, then the result is compared against the fingertip reading.](figures_en/week10_filter_setup.png)
 
 All three algorithms rest on the same idea: **the wrist signal = the real heartbeat + noise
-from movement**. Use the motion sensor to guess the noise, then subtract it. They differ
-only in how they make the guess.
-
-## Group 1 — Fixing the measuring tool before comparing anything
+from movement**. Use the motion sensor to guess the noise, then subtract it. They differ only
+in how they make the guess.
 
 - **The first attempt produced biologically impossible numbers** (07-28): heart rate jumping
-  from 53 to 125 to 133 and down to 18.5 within a few seconds — while the participant was
-  **lying still**.
-  → **What this means:** rather than adjusting things until the numbers looked nicer, the
-  decision was to stop. The cause was not in the filtering algorithm but in the
-  **heart-rate measuring step** that comes before it. Three algorithms cannot be compared
-  using a measurement that cannot be trusted.
+  53 → 125 → 133 → 18.5 within seconds, while the participant was **lying still**.
+  → **What this means:** rather than adjusting until the numbers looked nicer, the decision
+  was to stop. The cause was not in the filtering algorithm but in the **heart-rate measuring
+  step** before it.
 
 - **Rebuilding the beat detection over three rounds** (07-28), each fixing a weakness of the
-  previous one. After the rebuild, the LMS algorithm clearly won on the first participant.
-  → **What this means:** like adjusting a ruler until it is accurate enough to measure with.
-  *(Note added later: the third round of that rebuild — adding a constraint that heart rate
+  previous one.
+  → *(Note added later: the third round of that rebuild — adding a constraint that heart rate
   may not jump too far between readings — turned out to be the thing that hid the project's
-  largest error. See Week 13.)*
+  largest error. See Part 3.)*
 
-## Group 2 — Scaling to five people, and the result changing
+- **Scaling to five people: the good result did not survive** (07-28). Three improved, two
+  got worse.
 
-- **A good result on one person did not survive scaling up** (07-28). Across five people:
-  three improved, two got worse.
-  → **What this means:** exactly why several people must be tested before drawing a
-  conclusion. Reporting only the first participant's result would have published a
-  conclusion that was true by chance in a single case.
+- **Adding a second algorithm, and catching a serious numerical fault** (07-28). RLS
+  initially produced results off by hundreds of thousands of times, precisely when the
+  participant was **standing, sitting or lying still**. This kind of fault takes understanding
+  the algorithm's internals to see: with almost no movement, one internal quantity grows
+  without bound.
 
-- **Adding a second algorithm, and catching a serious numerical fault** (07-28). The RLS
-  algorithm initially produced results off by hundreds of thousands of times, precisely
-  during the periods when the participant was **standing, sitting or lying still**.
-  → **What this means:** this kind of fault cannot be found by running the code and looking
-  at the output — it takes understanding how the algorithm works inside to see that with
-  almost no movement, one internal quantity grows without bound. Fixed by resetting that
-  quantity above a threshold.
-
-- **Adding a third algorithm and completing the four-way comparison** (07-28).
+- **Adding a third algorithm, completing the four-way comparison** (07-28).
 
 | Processing | Average error *(this number was later overturned)* |
 | :--- | ---: |
@@ -75,42 +58,118 @@ only in how they make the guess.
 | RLS | 29.83 |
 | Wiener | 29.96 |
 
-→ **What this means:** no algorithm proved consistently better than **doing nothing at
-all**. This is a genuine research result: science does not always find the best method —
-proving that "this approach is not good enough, a different one is needed" is also a
-contribution, as long as the measurement is done seriously.
+- **Two final experiments** (07-28): using three separate sensor axes instead of one combined
+  value was **worse for every algorithm**; investigating why one participant made two
+  algorithms fail badly produced a plausible clue but **not enough evidence**, so the
+  investigation stopped rather than continuing indefinitely.
 
-## Group 3 — Two final experiments, and a decision to stop
+## Part 2 — Fixing a comparison made on the wrong data (14-08)
 
-- **Trying three separate sensor axes instead of one combined value** (07-28): **worse for
-  every algorithm**. Reason: too many parameters to estimate for the amount of data
-  available. The combined approach was kept.
+- **The baseline was computed over all 20,258 rows**, while the model was trained and marked
+  on the 16,880 rows left after excluding changeover periods. Two numbers were being compared
+  that described different datasets.
+  → **What this means:** the conclusion did not change, but this is exactly the kind of error
+  a reviewer catches immediately.
 
-- **Investigating why one participant made two algorithms fail badly** (07-28): that person
-  had the highest correlation between heart signal and movement, suggesting the algorithm
-  was eating the real signal along with the noise when the two look too alike. But another
-  person with almost the same correlation was **not** affected — so **the evidence was not
-  sufficient** and the investigation stopped there.
-  → **What this means:** deliberately stopping rather than digging indefinitely without new
-  clues. Recorded clearly as an unconfirmed hypothesis, not a conclusion.
+## Part 3 — Rejecting the ruler and redoing everything (15-08)
+
+- **A physiological test on the reference channel.** The cheapest possible question: *is the
+  heart rate higher while running than while lying down?* Result: the fingertip channel
+  **fails for 3 of 5 people**. The worst case recorded 127.7 bpm while standing still but only
+  89.7 while running.
+
+- **Plotting the raw signal and counting peaks by eye** to decide: is the sensor broken, or
+  the algorithm? The signal was **very clean** — 30 peaks in 12 seconds, that is 155.6 bpm.
+  The algorithm reported 77.0, **exactly half**. → The sensor is fine; the algorithm is not.
+
+- **Ruling out the competing explanation.** If each beat were counted twice, the gaps between
+  peaks would alternate long-short. Measured: the ratio of odd to even gaps was **1.03**
+  (perfectly even), while the ratio of odd to even peak heights was **2.22**. So it is the
+  **height** that alternates, not the spacing.
+
+![Figure 10.2: The pulse while running has tall and short peaks alternating. The machine counts only the tall ones, so it reports exactly half the true rate.](figures_en/week13_octave_error.png)
+
+- **A new estimator.** It takes the median gap between beats in the time domain, returns "not
+  readable" when the beats are too irregular instead of guessing, and drops the cross-window
+  continuity constraint entirely.
+
+- **Checked against hand counting:** one case went from 77.0 to **156.9** (hand count 155.6);
+  another from 155.8 to **118.9** (hand count 111.3). Participants passing the physiological
+  test rose from **2 of 5 to 4 of 5**.
+
+- **The whole comparison was re-run**, keeping all three algorithms, the parameter count and
+  the reference signal completely unchanged — only how a heart rate is read out of the
+  waveform changed.
+
+### Why did this fault survive for weeks?
+
+![Figure 10.3: The fault is in the measurement layer, but the guard is in the smoothing layer — so when the measurement layer occasionally got it right, the smoothing layer rejected it.](figures_en/week13_two_layers.png)
+
+The heart rate pipeline has two separate layers. The **measurement layer** reads 8 seconds of
+signal and produces a number. The **smoothing layer** takes the sequence over time and removes
+implausible jumps — the constraint added in Part 1 lives here.
+
+The fault happens in the **measurement layer**. When that layer keeps producing [77, 77, 77,
+…], which is perfectly consistent, the smoothing layer trusts it completely. Worse: when the
+measurement layer occasionally caught the true 156, the smoothing layer **rejected it** as too
+large a jump. **The system actively protected the wrong number.**
+
+**The architectural lesson:** a smoother removes *random noise*, not *systematic bias*. Faced
+with systematic bias it follows the wrong value smoothly, making the wrong number look more
+trustworthy than before filtering. This is also why a Kalman filter — the first thing intuition
+reaches for — **would not fix this bug**: it sits in the wrong layer.
+
+## Part 4 — The real result after the fix, and wrapping up
+
+| Signal | Share of windows with a readable heart rate |
+| :--- | ---: |
+| Fingertip (reference) | 35.0% |
+| Wrist, unfiltered | **9.6%** |
+| Wrist + NLMS | 8.0% |
+| Wrist + RLS | 5.5% |
+| Wrist + Wiener | 12.7% |
+
+The conclusion does not depend on the chosen threshold: tightening the criterion widens the
+gap between the two channels to **12.2 times**.
+
+→ **What this means:** the proposal's research question — *which algorithm is best* — **rests
+on a false premise**. For about 90% of the time, the wrist signal in this hardware
+configuration contains no heartbeat to clean up. A filter *separates* signal from noise; it
+does not *create* signal. The cause lies in the **optical wavelength** — the sensing layer,
+not the algorithm layer.
+
+- **Proposal comparison** (15-08): 14 committed items reviewed against the actual results,
+  with a reason for each change of direction.
+- **Merging the two reports into a seven-chapter thesis** (20-08), with an English version.
+
+## Looking back: the same kind of mistake, three times
+
+| Occasion | What was believed | The reality | Found by |
+| :--- | :--- | :--- | :--- |
+| Week 8 | 6 sessions "with the right labels, rows and clean logs" | Device lying on a table, nobody wearing it | Plotting the raw signal |
+| Week 9 | Four features are enough to separate five classes | Magnitude is invariant to rotation and erases orientation | A three-line mathematical argument |
+| Week 10 | The fingertip is a clean reference | Wrong by a factor of two for 3 of 5 people | Asking "is running higher than lying?" |
+
+All three tests took **under 15 minutes**, and all three sat **outside** every automated
+evaluation pipeline. The reason: metrics check whether the data *agrees with itself*, not
+whether it *agrees with physical reality*.
 
 ---
 
-## Where things stood at the end of the week
+## Where the project ended
 
-The three-algorithm comparison was complete, with "no filtering" as the control. The
-conclusion at the time: no algorithm demonstrated a consistent benefit.
-
-**That conclusion was overturned in Week 13** — not because the algorithms are better than
-we thought, but because the ruler used to mark them was broken.
+A seven-chapter thesis (31 pages, Vietnamese and English), a proposal comparison document,
+five new scripts, eleven figures. The heart rate subsystem's outcome is a **carefully
+validated negative result**: software filters cannot compensate for choosing the wrong optical
+wavelength at the hardware layer.
 
 ## How this differed from the original plan
 
-The original plan said *"Web BLE dashboard and final enclosure"*. In practice the whole
-week went into the research track, built from scratch to result in a single working session.
+Not done: the web dashboard, a demo video, a 60-minute endurance test. The documentation side
+went beyond the plan — instead of a 1,000–1,500 word write-up, the result is a complete thesis
+with an English version.
 
-**Which thesis chapter this feeds:** Chapter 4 sections 4.1–4.2 (experiment design and
-first-round results). This week's conclusion is overturned in sections 4.3–4.6.
+**Which thesis chapter this feeds:** all of Chapter 4, and Chapter 5 sections 5.3 and 5.4.
 
 ---
-[← Week 9](week_09.md) · [Weekly reports index](README.md) · [Week 11 →](week_11.md)
+[← Week 9](week_09.md) · [Weekly reports index](README.md)

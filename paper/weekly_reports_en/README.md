@@ -1,4 +1,4 @@
-# Weekly Reports — Week 5 to Week 13
+# Weekly Reports — Week 5 to Week 10
 
 Reports of **what was done and what came out of it** (not plans), compiled from the git
 commit history, `CHANGELOG.md` and the `README.md` progress log.
@@ -20,22 +20,19 @@ The two documents **complement each other rather than replace each other**:
   *how the conclusion changed along the way* — something the thesis cannot demonstrate
   about itself, because it was written after the answer was known.
 
-The clearest example: [Week 10](week_10.md) presents the three-filter comparison with
-confidence, and then [Week 13](week_13.md) overturns that very result after the reference
-measurement is found to be broken. Week 10's content is **kept as it was, not rewritten to
-agree with the thesis** — the process of finding and correcting one's own mistake is part
-of the research result.
+The clearest example sits inside [Week 10](week_10.md) itself: part 1 presents the
+three-filter comparison with confidence, and part 3 overturns that very result after the
+reference measurement is found to be broken. That order is **kept as it happened, not tidied
+up** — the process of finding and correcting one's own mistake is part of the research
+result.
 
 | Week | Topic | Milestone | Which thesis chapter it feeds |
 | :--- | :--- | :--- | :--- |
 | [Week 5](week_05.md) | Building the data collection foundation | — | Ch. 2.1 — device and firmware architecture |
 | [Week 6](week_06.md) | Hardening the collection pipeline | — | Ch. 2.1, 2.2 — collection protocol |
 | [Week 7](week_07.md) | A second sensor as the answer key | — | Ch. 2.2, 4.1 — reference channel |
-| [Week 8](week_08.md) | Data quality control, six fake sessions found | — | Ch. 2.2 — the dataset |
-| [Week 9](week_09.md) | First model trained, root cause identified | M3 | Ch. 3.2–3.4 — five-class result and root cause |
-| [Week 10](week_10.md) | Comparing three noise-removal methods | M4, M5 | Ch. 4.1–4.2 — **conclusion overturned in 4.3–4.6** |
-| [Week 11](week_11.md) | Putting the AI on the real device | M6 | Ch. 2.1, 5.1 — integrated architecture |
-| [Week 12](week_12.md) | Final dataset, redefining the problem | — | Ch. 3.5 — three-class redesign |
-| [Week 13](week_13.md) | **Writing up, and overturning Subsystem B** | — | Ch. 4.3–4.6, 5.3, 5.4 |
+| [Week 8](week_08.md) | Quality control, six fake sessions found | — | Ch. 2.2 — dataset; Ch. 5.3 |
+| [Week 9](week_09.md) | From the first model to AI on the device | M3, M6 | Ch. 3.2–3.5, Ch. 5.1 |
+| [Week 10](week_10.md) | The research track, and overturning it | M4, M5 | All of Ch. 4, Ch. 5.3–5.4 |
 
 Weeks 1–4 were submitted as a separate report earlier and are not in this folder.
