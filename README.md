@@ -81,7 +81,7 @@ The **LMS (Least Mean Squares) adaptive filter** uses real-time IMU magnitude as
 │   └── main.cpp
 ├── experiments/
 │   ├── fingertip/             # Research data: MAX30102 on fingertip (higher signal quality)
-│   └── wrist/                 # Competition data: MAX30102 on dorsal wrist
+│   └── wrist/                 # Research data: MAX30102 on dorsal wrist
 ├── dashboard/                 # Web BLE dashboard (HTML/JS)
 ├── paper/                     # Research writeup — Q3 journal target
 ├── platformio.ini
@@ -144,17 +144,6 @@ Roadmap: 5-class TFLite Micro model (Walk / Run / Sit / Stand / Lying Down).
 
 ---
 
-## Competition Track
-
-This project is submitted to the **Convergence Innovation Competition (CIC)** organized by Georgia Tech, under the **Global Health and Wellbeing** track.
-
-**Business case:** Cardiovascular disease causes 19.8 million deaths per year (WHO, 2022) — 79.6% attributable to modifiable risk factors. Continuous monitoring enables early intervention. However, commercial wearables cost $300–500 and lock raw sensor data behind proprietary APIs. Research-grade alternatives (ActiGraph: $325–$1,016/unit; Empatica E4: ~$1,690/unit) are prohibitively expensive for large-cohort studies.
-
-This device delivers comparable monitoring capability at ~$20–30 in components, with open BLE data access and fully customizable firmware — directly addressing the cost and data-access barriers faced by clinical researchers in low- and middle-income countries.
-
-**SDG alignment:** SDG 3 — Good Health and Well-Being.
-
----
 
 ## Milestones
 
@@ -167,7 +156,7 @@ This device delivers comparable monitoring capability at ~$20–30 in components
 | M5: Fingertip vs wrist experiment complete | End of week 8 | Done -- this is what M4's `lms_denoise_mvp.py` run across all 5 dual-PPG participants answers |
 | M6: Full integration test | End of week 8 | Not started |
 | M7: 60-minute stability test | End of week 11 | Not started |
-| M8: CIC submission + paper draft | End of week 12 | In progress — both report outlines (`paper/activity_classifier_report_OUTLINE.md`, `paper/adaptive_filter_comparison_OUTLINE.md`) fully filled in, not yet submitted anywhere |
+| M8: Technical report + paper draft | End of week 12 | In progress — both report outlines (`paper/activity_classifier_report_OUTLINE.md`, `paper/adaptive_filter_comparison_OUTLINE.md`) fully filled in, not yet submitted anywhere |
 | M9: Final demo | End of week 13 | Not started |
 
 ---
