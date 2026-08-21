@@ -1,8 +1,7 @@
-# Weekly Reports — Week 5 → Week 13 (Giang's part)
+# Báo cáo hàng tuần — Tuần 5 đến Tuần 13
 
 Báo cáo **đã làm gì / kết quả gì** (không phải kế hoạch), tổng hợp từ git commit history +
-`CHANGELOG.md` + `README.md` Progress Log. Chỉ có phần việc của Giang — Duy/Tùng không có
-trong repo này.
+`CHANGELOG.md` + `README.md` Progress Log.
 
 **Cách chia tuần:** git log thực tế cho thấy công việc dồn vào ~6 tuần calendar thật
 (27/6 → 20/8), không trải đều 9 tuần như lịch gốc (30/6 → 1/9). Theo lựa chọn của Giang,

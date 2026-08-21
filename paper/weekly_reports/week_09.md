@@ -1,85 +1,107 @@
-# Week 9 Report — Pipeline automation, bug-1 closed, classifier trained (M3)
+# Week 9 Report — Huấn luyện mô hình đầu tiên và tìm ra nguyên nhân gốc
 
-Phần việc của **Giang**. Kế hoạch gốc: "Integration debugging and stress testing" —
-thực tế tuần này là bước ngoặt: tự động hoá pipeline, đóng lại bug-1, và train ra
-classifier đầu tiên. Matches milestone **M3** (model trained + exported).
+## Tuần này làm gì — nhìn tổng quan
 
-## Đã làm
+**Giai đoạn:** Phase 2 — *Edge AI Integration*, tuần cuối của giai đoạn này. Dự án chuyển
+sang **bước 3: huấn luyện mô hình AI**. Khớp với mốc **M3** của kế hoạch.
 
-- **`log_serial.py` tự phân loại session + tự đề xuất participant_id** (07-28). Sau mỗi
-  lần retrieve, tự áp rule dry-run + check độ đầy đủ, tự dời file (dry-run →
-  `firmware_test_fixtures/`, hoàn chỉnh → `valid_sessions/` + tự thêm dòng vào
-  `participant_log.csv`). `participant_id` tự đoán số P tiếp theo — đánh đổi tốc độ lấy
-  rủi ro sai nhỏ (sửa sau dễ hơn dựng lại participant log từ đầu).
-- **`build_processed_dataset.py`** (07-28) — script mới build `data/processed/master_dataset.csv`
-  từ `valid_sessions/` + `participant_log.csv`, tự thêm cột `activity_group` (gộp
-  lying/sitting/standing → `stationary`) để train được cả model 3-class lẫn 5-class không
-  cần chạy lại script.
-- **Thêm P16/P17 (2 participant mới, dual-PPG đầy đủ)** (07-28) — dataset lên **N=17**.
-- **Bug-1 re-check tại N=6** (thêm P16/P17 vào pool raw-capture): kết quả **phức tạp hơn,
-  không giải quyết được** — biến thể raw-enhanced làm P04 tệ đi (62.2%→35.0%), P16 là
-  participant tệ nhất với biến thể relative-baseline (29.6%, tệ hơn cả baseline).
-- **Quyết định đóng bug-1 rabbit hole** (07-28): sau 3 biến thể per-axis thử ở N=4→6
-  không có biến thể nào generalize sạch, dừng thử thêm feature-engineering trên data đã
-  có. **Giữ 5-class** (không gộp 3-class) — coi lying/sitting/standing confusion là finding
-  đã root-cause (magnitude không mang thông tin hướng đeo), báo cáo trung thực thay vì vá
-  tiếp. Hướng fix thật (calibration step + gyro) parked cho lần thu data tương lai.
-- **Đánh giá đề xuất AI-model của advisor** (07-28): PPG+IMU→HR end-to-end được đánh giá
-  là ý hay nhưng cần nhiều participant hơn project hiện có (literature ~15 participant,
-  project có 5 dual-PPG) — giữ nguyên plan classical-filter, coi AI-model là hướng so sánh
-  thêm sau, không thay thế.
-- **Repo cleanup** (07-28) — dọn file/build artifact không dùng vào `archived/`.
-- **`train_activity_classifier.py`** (07-28) — train 5-class DecisionTree (LOGO-CV,
-  N=17). **Kết quả: mean accuracy 0.547**, lying/sitting/standing confuse nặng (lying
-  recall 0.283 — đúng root cause bug-1), walking/running tách tốt (0.639/0.771).
+**Một câu tóm tắt:** huấn luyện được mô hình đầu tiên (độ chính xác 54.8%), và quan trọng
+hơn — **tìm ra nguyên nhân toán học** giải thích vì sao nó không thể tốt hơn với bộ cảm
+biến hiện tại.
 
-### Technical story: đánh giá bằng LOGO-CV, và tại sao 1 con số accuracy không đủ
+**Ý nghĩa trong tổng thể:** đây là tuần bước ngoặt. Trước tuần này, việc AI hay nhầm ba tư
+thế tĩnh là một *lỗi cần sửa*. Sau tuần này, nó trở thành một *kết quả đã giải thích được*
+— và điều đó thay đổi hoàn toàn hướng đi của phần còn lại dự án.
 
-Đánh giá model bằng **LOGO-CV (leave-one-group-out)**: khác với chia train/test ngẫu
-nhiên theo dòng, mỗi participant lần lượt bị cho ra rìa làm test set — để đo model có
-học vẹt đặc điểm của từng người hay thật sự tổng quát hoá được sang người chưa từng
-thấy. Lặp lại cho đến khi mọi participant đều 1 lần làm test set, rồi lấy trung bình.
+---
 
-Con số 0.547 trung bình dễ gây hiểu lầm là model "khá đều" trên cả 5 lớp. Nhìn per-class
-recall thì không phải vậy: lying chỉ 0.283 — cao hơn đoán mò (1/5 = 0.20 cho bài toán
-5-class cân bằng) nhưng chỉ nhỉnh hơn một chút, trong khi sitting (0.490) và standing
-(0.548) không hề thấp — standing thậm chí bằng đúng average. Tức là model không tệ đều:
-chỉ riêng lying gần như đoán mò, còn lại vẫn ở mức chấp nhận được. Nếu chỉ báo cáo
-0.547 sẽ che mất chỗ yếu thật của model.
+## Nhóm việc 1 — Tự động hoá toàn bộ đường đi của dữ liệu
 
-**Vì sao lying/sitting/standing (3 tư thế tĩnh) lại khó phân biệt trong khi walking/
-running (2 hoạt động động) thì không** — cả 4 feature đưa vào model (`mean_mag`,
-`std_mag`, `peak_max`, `peak_rel`) đều là hàm số của **magnitude** gia tốc, tức
-`sqrt(ax² + ay² + az²)`. Đây chính là độ dài (norm) của vector gia tốc — khi thiết bị bị
-xoay (đổi hướng đeo), phép xoay chỉ đổi *hướng* của vector, không đổi *độ dài* của nó.
-Nên dù từng trục ax/ay/az đổi giá trị theo hướng xoay, magnitude vẫn giữ nguyên — tức là
-4 feature này **không mang thông tin hướng đeo (orientation)**, chỉ phản ánh cường độ
-chuyển động. Lying/sitting/standing khác nhau đúng ở orientation (nằm/ngồi/đứng là 3
-hướng khác nhau của cùng 1 trạng thái gần như đứng yên), không khác ở cường độ chuyển
-động — nên bộ feature hiện tại về nguyên lý không thể tách được 3 lớp này. Walking/
-running thì khác nhau rõ ở *cường độ* (magnitude dao động mạnh khi chạy hơn khi đi) —
-đúng thứ magnitude đo được, nên 2 lớp này tách tốt.
+- **Chương trình tự phân loại và sắp xếp dữ liệu sau mỗi buổi đo** (07-28). Tự áp quy tắc
+  phát hiện buổi đo giả từ Tuần 8, tự chuyển file vào đúng thư mục, tự thêm dòng vào sổ
+  ghi người tham gia.
+- **Chương trình dựng bộ dữ liệu huấn luyện từ dữ liệu gốc** (07-28), tự thêm sẵn cột gộp
+  nhóm để về sau huấn luyện được cả bản 5 lớp lẫn bản 3 lớp mà không phải chạy lại.
+  → **Ý nghĩa:** từ tuần này, đường đi *thu dữ liệu → xử lý → huấn luyện* chạy được từ đầu
+  đến cuối **không cần sửa tay ở bước nào**. Đây là điều kiện để mọi con số trong báo cáo
+  về sau đều tái tạo được.
 
-**3 hướng per-axis từng thử trước đó (23/7–28/7) không generalize được**, và tuần này
-mới làm rõ được cơ chế thật: hypothesis ban đầu là raw device-frame nhạy với "lật cổ
-tay trong lúc vận động" — nhưng đối chiếu số liệu thật thì không khớp: raw per-axis đạt
-68.2% ở N=4, nhưng riêng P03 rớt còn 46.8% (ngang baseline), 3 người còn lại vẫn 68.2%.
-Nếu cơ chế là lật-cổ-tay-trong-lúc-vận-động, nó phải ảnh hưởng **đều tất cả participant**
-như nhau — không giải thích được vì sao chỉ P03 fail. Bác bỏ hypothesis đó; cơ chế đúng
-hơn là mỗi người đeo thiết bị ở 1 góc *cố định* khác nhau — khác nhau *giữa người*, không
-phải lật cổ tay trong lúc đo — đúng với "wearing-angle confound" mà bug-1 rabbit hole gặp
-phải ở cả 3 biến thể per-axis đã thử.
+- **Thêm 2 người tham gia mới**, bộ dữ liệu lên 17 người.
 
-## Kết quả
+## Nhóm việc 2 — Cách chấm điểm AI cho công bằng
 
-Pipeline thu→xử lý→train chạy được từ đầu đến cuối không cần sửa tay giữa các bước.
-Bug-1 chính thức đóng lại như 1 finding đã giải thích được, không phải bug tồn đọng.
-Model 5-class đầu tiên: **0.547 accuracy (LOGO-CV, N=17)**.
+![Hình 9.1: Mỗi vòng chấm, một người bị giữ riêng ra làm bài kiểm tra, AI chỉ được học từ 17 người còn lại. Lặp lại đủ 18 vòng.](figures/week09_logocv.png)
+
+Mô hình được chấm bằng cách **giữ riêng từng người ra làm bài kiểm tra**: AI học từ 17
+người, rồi bị kiểm tra trên người thứ 18 mà nó chưa từng thấy. Lặp lại cho đến khi mọi
+người đều một lần làm bài kiểm tra, rồi lấy trung bình.
+
+→ **Ý nghĩa:** nếu trộn chung dữ liệu của cùng một người vào cả phần học lẫn phần kiểm
+tra, AI chỉ cần "nhớ mặt" người đó là được điểm cao — điểm rất đẹp nhưng hoàn toàn vô
+nghĩa, vì ngoài đời AI luôn gặp người mới. Cách chấm này cho biết con số **thật sự** khi
+gặp một người lạ.
+
+## Nhóm việc 3 — Kết quả, và vì sao một con số trung bình chưa đủ
+
+**Kết quả: độ chính xác trung bình 54.8%.** Nhưng con số này che mất chuyện thật:
+
+| Hoạt động | Nhận đúng | |
+| :--- | ---: | :--- |
+| Nằm | 28.4% | gần bằng đoán mò (20%) |
+| Ngồi | 46.9% | |
+| Đứng | 55.1% | |
+| Đi bộ | 64.6% | tốt |
+| Chạy | 78.2% | rất tốt |
+
+→ **Ý nghĩa:** mô hình **không hề kém đều**. Nó rất tốt ở hai hoạt động động, và gần như
+mù ở một tư thế tĩnh. Nếu chỉ báo cáo con số 54.8% thì người đọc sẽ nghĩ "mô hình tầm
+thường, cần chỉnh thêm" — trong khi sự thật là có một chỗ hỏng rất cụ thể.
+
+### Vì sao ba tư thế tĩnh không thể phân biệt được
+
+Cả bốn đặc trưng đưa vào mô hình đều tính từ **độ lớn** của gia tốc, tức là
+`√(ax² + ay² + az²)` — chính là **độ dài** của mũi tên gia tốc trong không gian.
+
+Khi người đeo xoay cổ tay, mũi tên đó đổi **hướng** nhưng **không đổi độ dài**. Mà nằm,
+ngồi, đứng thì khác nhau đúng ở **hướng** cổ tay, chứ gần như không khác nhau ở mức độ
+chuyển động.
+
+→ **Kết luận:** thông tin cần để phân biệt ba tư thế đó **đã bị xoá sạch ngay ở bước tính
+đặc trưng**, trước khi mô hình kịp nhìn thấy dữ liệu. Đây là giới hạn **cấu trúc**, không
+phải lỗi chọn tham số. Không có cách chỉnh mô hình nào cứu được.
+
+Ngược lại, đi bộ và chạy khác nhau rõ ở **mức độ chuyển động** — đúng thứ mà độ lớn đo
+được — nên hai lớp này tách rất tốt.
+
+## Nhóm việc 4 — Quyết định dừng đúng lúc
+
+- **Đóng lại hướng sửa bằng đặc trưng từng trục** (07-28). Sau khi thử biến thể thứ ba trên
+  6 người, kết quả **phức tạp hơn chứ không sáng ra**: cách sửa mới làm một người tụt từ
+  62.2% xuống 35.0%.
+  → **Ý nghĩa:** quyết định dừng thử thêm, báo cáo trung thực vấn đề như một kết quả đã
+  giải thích được, thay vì tiếp tục vá. Hướng sửa thật sự — thêm cảm biến con quay hồi
+  chuyển và một bước hiệu chuẩn — được ghi lại cho lần thu dữ liệu sau, vì không thể áp
+  ngược vào dữ liệu đã thu.
+
+- **Đánh giá đề xuất dùng mô hình AI của giảng viên hướng dẫn** (07-28): ý tưởng tốt nhưng
+  cần nhiều người tham gia hơn đáng kể so với dự án hiện có. Giữ nguyên hướng thuật toán cổ
+  điển, coi mô hình AI là hướng so sánh thêm về sau.
+
+---
+
+## Kết quả cuối tuần
+
+Đường đi thu → xử lý → huấn luyện chạy trọn vẹn không cần can thiệp tay. Mô hình 5 lớp đầu
+tiên đạt **54.8%**. Vấn đề nhầm ba tư thế tĩnh chính thức chuyển từ "lỗi tồn đọng" thành
+**"kết quả đã giải thích được nguyên nhân"**.
 
 ## Khác biệt so với kế hoạch gốc
 
-Không có "3 full 30-minute sessions" stress test trên hardware tích hợp (chưa có
-PCB/enclosure tích hợp — xem Week 11 cho phần validate trên hardware thật).
+Kế hoạch gốc ghi *"Integration debugging and stress testing"*. Chưa có bài kiểm tra chịu
+tải dài trên phần cứng tích hợp — việc kiểm chứng trên thiết bị thật diễn ra ở Tuần 11.
+
+**Dẫn tới chương nào của thesis:** Chương 3 mục 3.2 đến 3.4 (kết quả 5 lớp và nguyên nhân
+gốc), Chương 2 mục 2.4 (cách chấm điểm).
 
 ---
 [← Week 8](week_08.md) · [Weekly reports index](README.md) · [Week 10 →](week_10.md)

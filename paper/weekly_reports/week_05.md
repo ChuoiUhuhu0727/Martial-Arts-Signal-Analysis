@@ -1,7 +1,5 @@
 # Week 5 Report — Dựng nền móng thu thập dữ liệu
 
-Phần việc của **Giang** (Duy/Tùng không có trong repo này).
-
 ## Tuần này làm gì — nhìn tổng quan
 
 **Giai đoạn:** Phase 2 của dự án — *Edge AI Integration* (Tuần 5–9). Nhưng cụ thể tuần
@@ -111,8 +109,8 @@ Một quy trình thu dữ liệu hoàn chỉnh, chạy được từ đầu đ�
 
 ## Khác biệt so với kế hoạch gốc
 
-Kế hoạch gốc ghi *"TFLite Micro setup and Gerber files"* — tức là bắt đầu phần AI, và
-phần PCB (thuộc việc của Duy). Thực tế phần Giang tuần này **không đụng tới AI**.
+Kế hoạch gốc ghi *"TFLite Micro setup and Gerber files"* — tức là bắt đầu phần AI
+và phần PCB. Thực tế tuần này **không đụng tới AI**.
 
 Lý do là một đánh giá thứ tự ưu tiên: chưa có dữ liệu đáng tin thì chưa có gì để đưa vào
 mô hình. Dồn công vào AI trước khi hạ tầng thu dữ liệu ổn định sẽ dẫn tới việc huấn luyện

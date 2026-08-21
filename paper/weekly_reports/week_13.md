@@ -1,12 +1,21 @@
 # Week 13 Report — Viết report, và phát hiện lật ngược kết quả Subsystem B
 
-Phần việc của **Giang**. Kế hoạch gốc: "Documentation and final demo". Tuần này đúng theo
-kế hoạch ở phần documentation — nhưng **trong lúc viết writeup thì phát hiện thước đo tham
-chiếu của Subsystem B bị sai gấp đôi**, buộc phải bác bỏ và làm lại kết quả đã công bố ở
-[Week 10](week_10.md).
+## Tuần này làm gì — nhìn tổng quan
 
-> **Đây là tuần quan trọng nhất của cả dự án.** Không phải vì làm được thêm tính năng, mà
-> vì phát hiện ra một kết quả tưởng đã xong thực ra không dùng được — và sửa được nó.
+**Giai đoạn:** Phase 3 — *Polish and Documentation*, tuần cuối cùng của dự án.
+
+**Một câu tóm tắt:** đang ngồi viết báo cáo tổng kết thì phát hiện ra **cái thước dùng để
+đo nhịp tim suốt cả dự án bị sai gấp đôi** — buộc phải bác bỏ và làm lại toàn bộ kết quả
+đã công bố ở [Tuần 10](week_10.md).
+
+**Ý nghĩa trong tổng thể:** đây là tuần quan trọng nhất của cả dự án. Không phải vì làm
+thêm được tính năng gì, mà vì phát hiện ra một kết quả tưởng đã xong thực ra không dùng
+được — và kịp sửa trước khi nộp.
+
+> **Vì sao lỗi lại lộ ra đúng lúc viết báo cáo?** Vì viết báo cáo buộc phải giải thích
+> từng con số cho người khác hiểu. Mà muốn giải thích được thì phải tự hỏi *con số này
+> đến từ đâu, và nó có hợp lý không* — câu hỏi mà suốt các tuần trước không ai đặt ra,
+> vì mọi thứ đang chạy trơn tru.
 
 ## Đã làm
 
@@ -49,6 +58,9 @@ chiếu của Subsystem B bị sai gấp đôi**, buộc phải bác bỏ và l�
   notch thì khoảng cách giữa các đỉnh phải so le dài-ngắn. Đo được: tỉ lệ khoảng lẻ/chẵn
   = **1.03** (đều tăm tắp), còn tỉ lệ biên độ lẻ/chẵn = **2.22**. Vậy thứ so le là **biên
   độ**, không phải khoảng cách.
+
+![Hình 13.1: Sóng nhịp tim khi chạy có đỉnh cao và đỉnh thấp xen kẽ. Máy chỉ đếm những đỉnh cao, nên báo đúng một nửa nhịp thật.](figures/week13_octave_error.png)
+
 - **`hr_estimator_v2.py` — bộ ước lượng mới.** Đo trung vị khoảng cách đỉnh trong miền thời
   gian, trả về "không đọc được" (NaN) khi nhịp quá không đều thay vì đoán bừa, bỏ hoàn toàn
   ràng buộc liên tục giữa các cửa sổ.
@@ -90,6 +102,8 @@ Sản phẩm giao: 1 thesis 7 chương (31 trang, bản Việt + Anh), 1 tài li
 5 script mới, 11 hình.
 
 ## Technical story 1: vì sao lỗi này sống sót nhiều tuần?
+
+![Hình 13.2: Lỗi nằm ở tầng đo, nhưng bộ chặn lại nằm ở tầng làm mượt — nên khi tầng đo thỉnh thoảng bắt đúng, tầng làm mượt lại gạt đi.](figures/week13_two_layers.png)
 
 Pipeline nhịp tim có hai tầng riêng biệt. **Measurement Layer** đọc 8 giây sóng và trả ra
 một con số. **Tracking Layer** nhận dãy số theo thời gian và loại bỏ các bước nhảy phi lý —
