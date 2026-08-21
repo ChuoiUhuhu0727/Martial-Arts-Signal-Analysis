@@ -5,6 +5,18 @@ tuần này dồn vào research track (LMS/RLS/Wiener), xây từ đầu đến 
 cùng 1 phiên làm việc (07-28). Matches milestone **M4** (LMS filter) + **M5** (fingertip
 vs wrist experiment).
 
+> ⚠️ **KẾT LUẬN CỦA TUẦN NÀY VỀ SAU BỊ BÁC BỎ — xem [Week 13](week_13.md)**
+>
+> Bốn con số MAE công bố ở tuần này (baseline 26.95 · LMS 26.96 · RLS 29.83 · Wiener 29.96)
+> được đo so với nhịp tim suy từ kênh đầu ngón tay. Ngày 15-08, kênh tham chiếu đó bị phát
+> hiện **sai gấp đôi ở 3/5 đối tượng** do lỗi octave error, nên cả bốn con số trên đều đo
+> bằng một cái thước cong và **không dùng để kết luận được**.
+>
+> Nội dung tuần này **được giữ nguyên, không sửa lại**. Việc một kết luận tự tin về sau bị
+> chính nhóm lật lại là một phần của quá trình nghiên cứu, và là bằng chứng trực tiếp cho
+> luận điểm ở Chương 5 mục 5.3 của thesis: các chỉ số đánh giá thông thường không phát hiện
+> được lỗi này, vì chúng kiểm tra tính nhất quán chứ không kiểm tra tính đúng đắn vật lý.
+
 ## Đã làm
 
 - **`lms_denoise_mvp.py` — MVP đầu tiên (P02, LMS only)** (07-28). Kết quả ban đầu chưa
@@ -41,7 +53,7 @@ vs wrist experiment).
   người tham gia đứng/ngồi/nằm yên (ít chuyển động). Tìm ra nguyên nhân và sửa được lỗi
   tính toán này — 1 dạng công việc debug (tìm lỗi) đòi hỏi hiểu sâu cách thuật toán hoạt
   động bên trong, không chỉ chạy code và nhìn kết quả.
-- **Thêm Wiener, hoàn tất so sánh 4 nhánh** (07-28). **Kết quả cuối: baseline=26.95,
+- **Thêm Wiener, hoàn tất so sánh 4 nhánh** (07-28). **[Kết quả này về sau bị bác bỏ — xem Week 13]** **Kết quả cuối: baseline=26.95,
   LMS=26.96, RLS=29.83, Wiener=29.96 (bpm, pooled MAE, N=5)** — không thuật toán nào thắng
   rõ ràng, mỗi participant có filter thắng khác nhau. Kết luận trung thực cho pha MVP: chưa
   filter classical nào chứng minh lợi ích nhất quán so với không lọc gì.
@@ -75,3 +87,5 @@ Tùng, ngoài phạm vi repo này.
 
 ---
 [← Week 9](week_09.md) · [Weekly reports index](README.md) · [Week 11 →](week_11.md)
+
+**Dẫn tới chương nào của thesis:** Chương 4 mục 4.1–4.2 (thiết kế thí nghiệm và kết quả vòng đầu). Kết luận của tuần này bị lật ở mục 4.3–4.6.
