@@ -1,77 +1,114 @@
-# Week 10 Report — LMS/RLS/Wiener adaptive filter research track (M4, M5)
+# Week 10 Report — So sánh ba cách lọc nhiễu cho tín hiệu nhịp tim
 
-Phần việc của **Giang**. Kế hoạch gốc: "Web BLE dashboard and final enclosure" — thực tế
-tuần này dồn vào research track (LMS/RLS/Wiener), xây từ đầu đến kết quả cuối cùng trong
-cùng 1 phiên làm việc (07-28). Matches milestone **M4** (LMS filter) + **M5** (fingertip
-vs wrist experiment).
+> ⚠️ **KẾT LUẬN CỦA TUẦN NÀY VỀ SAU BỊ BÁC BỎ — xem [Week 13](week_13.md)**
+>
+> Bốn con số công bố ở tuần này được đo so với nhịp tim suy từ cảm biến đầu ngón tay. Ngày
+> 15-08, kênh tham chiếu đó bị phát hiện **sai gấp đôi ở 3 trên 5 người** do một lỗi thuật
+> toán, nên cả bốn con số đều được đo bằng **một cái thước cong** và không dùng để kết
+> luận được.
+>
+> Nội dung tuần này **được giữ nguyên, không sửa lại**. Việc một kết luận tự tin về sau bị
+> chính nhóm lật lại là một phần của quá trình nghiên cứu, và là bằng chứng trực tiếp cho
+> luận điểm ở Chương 5 mục 5.3 của thesis.
 
-## Đã làm
+## Tuần này làm gì — nhìn tổng quan
 
-- **`lms_denoise_mvp.py` — MVP đầu tiên (P02, LMS only)** (07-28). Kết quả ban đầu chưa
-  dùng được: BPM tức thời nhảy phi thực tế (53→125→133→18.5 bpm liên tiếp lúc nằm yên).
-  Quyết định: peak-detection method cần làm lại trước khi so sánh filter nào — không phải
-  bug riêng của LMS.
-  → **Ý nghĩa:** đây là bước đầu tiên của hướng nghiên cứu riêng (không phải sản phẩm
-  chính): tìm hiểu xem thuật toán lọc nhiễu nào giúp đo nhịp tim ở cổ tay chính xác hơn.
-  Kết quả thử đầu tiên cho ra những con số vô lý về mặt sinh học (nhịp tim người không thể
-  nhảy từ 53 lên 133 rồi xuống 18.5 trong vài giây liên tiếp) — thay vì cố "vá" cho ra số
-  đẹp, quyết định dừng lại tìm đúng nguyên nhân gốc: cách nhận diện từng nhịp tim (bước đo
-  trước khi so sánh thuật toán lọc) chưa đủ tin cậy. Đây là cách làm khoa học đúng đắn:
-  không so sánh 3 phương pháp lọc trên 1 phép đo chưa đáng tin.
-- **Làm lại peak-detection 3 vòng** (07-28): range-gate vật lý (40-180bpm) → spectral FFT
-  → continuity-tracking + burn-in (giới hạn mỗi window trong 25bpm quanh ước lượng trước,
-  seed bằng median 5-window). Sau khi sửa: LMS thắng rõ trên P02 (24.0 vs 29.6 bpm MAE).
-  → **Ý nghĩa:** thử 3 cách khác nhau để nhận diện đúng từng nhịp tim từ tín hiệu, mỗi
-  cách sau khắc phục điểm yếu của cách trước — giống như tinh chỉnh 1 công cụ đo cho đến
-  khi nó đủ tin cậy. Sau khi có công cụ đo đáng tin, mới thấy rõ ràng thuật toán lọc LMS
-  giúp cải thiện độ chính xác đo nhịp tim trên người thử nghiệm đầu tiên.
-- **Mở rộng ra cả 5 participant dual-PPG** (07-28): **P02 không generalize** — pooled MAE
-  baseline=26.95 vs LMS=26.96 (gần như hoà). 3/5 participant LMS giúp, 2/5 làm tệ hơn.
-  → **Ý nghĩa:** kết quả tốt trên 1 người không có nghĩa đúng cho tất cả mọi người — đây
-  chính là lý do phải test trên nhiều người tham gia khác nhau trước khi kết luận, không
-  tin vào 1 kết quả đơn lẻ. Khi mở rộng ra 5 người, kết quả không còn nhất quán như lúc chỉ
-  test 1 người — 1 phát hiện quan trọng, tránh việc báo cáo sai 1 kết luận chỉ đúng ngẫu
-  nhiên cho 1 trường hợp.
-- **Thêm RLS, bắt + sửa bug windup số học** (07-28): RLS đầu tiên nổ số hoàn toàn (residual
-  std 7e3→2.3e7) — root cause: λ=0.99 khiến ma trận P tăng không giới hạn trong đoạn accel
-  gần-phẳng (lying/sitting/standing). Fix: reset P khi trace(P) vượt ngưỡng. Sau fix: pooled
-  MAE RLS=29.83bpm — thắng 3/5 participant nhưng thua đậm ở P04 (46.06).
-  → **Ý nghĩa:** thử thêm thuật toán lọc thứ 2 (RLS) để so sánh — thuật toán này ban đầu bị
-  lỗi tính toán nghiêm trọng (kết quả tính ra sai lệch cả trăm ngàn lần) đúng vào những lúc
-  người tham gia đứng/ngồi/nằm yên (ít chuyển động). Tìm ra nguyên nhân và sửa được lỗi
-  tính toán này — 1 dạng công việc debug (tìm lỗi) đòi hỏi hiểu sâu cách thuật toán hoạt
-  động bên trong, không chỉ chạy code và nhìn kết quả.
-- **Thêm Wiener, hoàn tất so sánh 4 nhánh** (07-28). **Kết quả cuối: baseline=26.95,
-  LMS=26.96, RLS=29.83, Wiener=29.96 (bpm, pooled MAE, N=5)** — không thuật toán nào thắng
-  rõ ràng, mỗi participant có filter thắng khác nhau. Kết luận trung thực cho pha MVP: chưa
-  filter classical nào chứng minh lợi ích nhất quán so với không lọc gì.
-  → **Ý nghĩa:** hoàn tất so sánh cả 3 thuật toán lọc với phương án "không lọc gì cả" làm
-  đối chứng. Kết quả trung thực: không thuật toán nào chứng minh được luôn luôn tốt hơn
-  không lọc gì, trên cả 5 người thử nghiệm. Đây là 1 kết quả nghiên cứu có giá trị thật để
-  đưa vào bài báo khoa học (target Q3 journal) — khoa học không phải lúc nào cũng phải "tìm
-  ra cách tốt nhất", chứng minh được "cách này chưa đủ tốt, cần cách khác" cũng là đóng góp
-  thật, miễn là đo đạc nghiêm túc và trung thực.
-- **2 thử nghiệm bounded cuối** (07-28): (1) reference 3-trục riêng thay vì magnitude gộp
-  → kết quả TỆ HƠN mọi filter (24 tap overfit trên ~45k mẫu/session) — giữ magnitude. (2)
-  Điều tra vì sao P04 làm RLS/Wiener tệ hẳn (46-47bpm) — correlation(wrist, accel) của P04
-  cao nhất (-0.72), gợi ý RLS/Wiener "ăn" cả tín hiệu tim thật khi tương quan mạnh — nhưng
-  P03 correlation gần tương đương (-0.47) không sập nặng như P04, nên chưa xác nhận được,
-  dừng điều tra ở đây.
-  → **Ý nghĩa:** thử thêm 2 hướng cải thiện nữa trong giới hạn thời gian cho phép — 1
-  hướng chứng minh rõ ràng là không nên làm (làm mọi thứ tệ hơn), hướng còn lại có manh mối
-  hợp lý nhưng chưa đủ bằng chứng để kết luận chắc chắn. Chủ động dừng lại đúng lúc thay vì
-  tiếp tục đào sâu vô thời hạn khi chưa có lý do mới — 1 kỹ năng quản lý thời gian nghiên
-  cứu quan trọng không kém kỹ năng kỹ thuật.
+**Giai đoạn:** Phase 3 — *Polish and Documentation* (Tuần 10–13). Khớp với mốc **M4** và
+**M5** của kế hoạch.
 
-## Kết quả
+**Một câu tóm tắt:** dựng và chạy trọn vẹn **hướng nghiên cứu riêng** của dự án — so sánh
+ba thuật toán lọc nhiễu xem cách nào giúp đo nhịp tim ở cổ tay chính xác nhất.
 
-**Không filter nào thắng nhất quán ở N=5** — đây là kết quả nghiên cứu thật (research
-question trả lời được: "không", có giá trị publish), không phải thất bại pipeline.
+**Ý nghĩa trong tổng thể:** đây là phần *nghiên cứu*, khác với phần *sản phẩm*. Nhận diện
+hoạt động (Tuần 5–9) là tính năng người dùng thấy được. Phần này trả lời một câu hỏi mở
+mà chưa ai trả lời trên phần cứng rẻ tiền cỡ này.
+
+---
+
+## Bố trí thí nghiệm
+
+![Hình 10.1: Tín hiệu ở cổ tay lẫn nhiễu do cử động tay. Cả ba thuật toán đều dùng cảm biến chuyển động để đoán phần nhiễu rồi trừ đi, sau đó so kết quả với nhịp tim đo ở đầu ngón tay.](figures/week10_filter_setup.png)
+
+Cả ba thuật toán đều dựa trên cùng một ý tưởng: **tín hiệu ở cổ tay = nhịp tim thật + nhiễu
+do cử động**. Dùng cảm biến chuyển động để đoán phần nhiễu, rồi trừ nó đi. Chúng chỉ khác
+nhau ở cách đoán.
+
+## Nhóm việc 1 — Sửa công cụ đo trước khi so sánh bất cứ thứ gì
+
+- **Lần thử đầu tiên cho ra kết quả vô lý về mặt sinh học** (07-28): nhịp tim nhảy từ 53
+  lên 125, lên 133, rồi xuống 18.5 trong vài giây liên tiếp — trong khi người tham gia đang
+  **nằm yên**.
+  → **Ý nghĩa:** thay vì cố chỉnh cho ra số đẹp, quyết định dừng lại. Nguyên nhân không nằm
+  ở thuật toán lọc mà ở **bước đo nhịp tim** đứng trước nó. Không thể so sánh ba thuật toán
+  bằng một phép đo chưa đáng tin.
+
+- **Làm lại cách nhận diện nhịp tim qua ba vòng** (07-28), mỗi vòng khắc phục điểm yếu của
+  vòng trước. Sau khi sửa, thuật toán LMS thắng rõ trên người đầu tiên.
+  → **Ý nghĩa:** giống như tinh chỉnh một cái thước cho đến khi nó đủ chính xác, rồi mới
+  dùng nó đo. *(Ghi chú muộn: chính vòng sửa thứ ba — thêm ràng buộc không cho nhịp tim
+  nhảy quá xa giữa hai lần đo — về sau hoá ra là thứ che giấu lỗi lớn nhất của dự án. Xem
+  Tuần 13.)*
+
+## Nhóm việc 2 — Mở rộng ra 5 người, và kết quả không còn như cũ
+
+- **Kết quả tốt trên một người không giữ được khi mở rộng** (07-28). Trên 5 người: 3 người
+  được cải thiện, 2 người tệ đi.
+  → **Ý nghĩa:** đây chính là lý do phải thử trên nhiều người trước khi kết luận. Nếu chỉ
+  báo cáo kết quả của người đầu tiên, đã công bố một kết luận chỉ đúng ngẫu nhiên cho một
+  trường hợp.
+
+- **Thêm thuật toán thứ hai, và bắt được một lỗi tính toán nghiêm trọng** (07-28). Thuật
+  toán RLS ban đầu cho kết quả sai lệch hàng trăm nghìn lần, đúng vào những lúc người tham
+  gia **đứng, ngồi hoặc nằm yên**.
+  → **Ý nghĩa:** dạng lỗi này không tìm ra được bằng cách chạy thử rồi nhìn kết quả — phải
+  hiểu thuật toán hoạt động bên trong thế nào mới thấy: khi gần như không có chuyển động,
+  một đại lượng bên trong thuật toán phình to không giới hạn. Sửa bằng cách đặt ngưỡng đặt
+  lại đại lượng đó.
+
+- **Thêm thuật toán thứ ba, hoàn tất so sánh bốn nhánh** (07-28).
+
+| Cách xử lý | Sai số trung bình *(số này về sau bị bác bỏ)* |
+| :--- | ---: |
+| Không lọc gì | 26.95 |
+| NLMS | 26.96 |
+| RLS | 29.83 |
+| Wiener | 29.96 |
+
+→ **Ý nghĩa:** không thuật toán nào chứng minh được là luôn tốt hơn việc **không lọc gì
+cả**. Đây là một kết quả nghiên cứu có giá trị thật: khoa học không phải lúc nào cũng tìm
+ra cách tốt nhất — chứng minh được "cách này chưa đủ tốt, cần hướng khác" cũng là đóng
+góp, miễn là đo đạc nghiêm túc.
+
+## Nhóm việc 3 — Hai thử nghiệm cuối, và quyết định dừng
+
+- **Thử dùng ba trục cảm biến riêng thay vì gộp thành một** (07-28): **tệ hơn ở mọi thuật
+  toán**. Lý do: quá nhiều tham số cần ước lượng so với lượng dữ liệu có. Giữ cách gộp.
+
+- **Điều tra vì sao một người tham gia làm hai thuật toán tệ hẳn** (07-28): người đó có mức
+  tương quan giữa tín hiệu tim và cử động cao nhất, gợi ý rằng thuật toán đã "ăn" luôn cả
+  tín hiệu thật khi hai thứ quá giống nhau. Nhưng một người khác có mức tương quan gần
+  tương đương lại **không** bị như vậy — nên **chưa đủ bằng chứng để kết luận**, dừng điều
+  tra ở đây.
+  → **Ý nghĩa:** chủ động dừng đúng lúc thay vì đào sâu vô thời hạn khi chưa có manh mối
+  mới. Ghi rõ đây là giả thuyết chưa xác nhận, không phải kết luận.
+
+---
+
+## Kết quả cuối tuần
+
+Hoàn tất so sánh ba thuật toán lọc với phương án đối chứng "không lọc gì". Kết luận tại
+thời điểm đó: chưa thuật toán nào chứng minh được lợi ích nhất quán.
+
+**Kết luận này đã bị lật ở Tuần 13** — không phải vì các thuật toán tốt hơn ta tưởng, mà
+vì cái thước dùng để chấm điểm chúng bị hỏng.
 
 ## Khác biệt so với kế hoạch gốc
 
-Không có Web BLE dashboard tuần này (chưa làm — xem ghi chú Week 13). Enclosure thuộc
-Tùng, ngoài phạm vi repo này.
+Kế hoạch gốc ghi *"Web BLE dashboard and final enclosure"*. Thực tế tuần này dồn toàn bộ
+vào hướng nghiên cứu, xây từ đầu đến kết quả trong cùng một phiên làm việc.
+
+**Dẫn tới chương nào của thesis:** Chương 4 mục 4.1–4.2 (thiết kế thí nghiệm và kết quả
+vòng đầu). Kết luận của tuần này bị lật ở mục 4.3–4.6.
 
 ---
 [← Week 9](week_09.md) · [Weekly reports index](README.md) · [Week 11 →](week_11.md)
