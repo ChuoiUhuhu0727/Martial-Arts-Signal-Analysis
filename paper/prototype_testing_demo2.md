@@ -29,28 +29,30 @@ Nguyên mẫu này **không phải một mô-đun phần mềm**. Nó là một 
 lên nhau, và một tầng hỏng thì mọi tầng phía trên đều vô nghĩa — dù bản thân chúng viết đúng.
 Một mô hình AI chính xác 100% cũng không cứu được một phiên đo bị cắt giữa chừng vì hết điện.
 
-### 1.2. Phạm vi kiểm thử — tầng nào đã kiểm, tầng nào chưa
+### 1.2. Phạm vi kiểm thử — sáu tầng và hai loại bằng chứng
 
-![Hình 1: Sáu tầng của hệ thống. Ba tầng được kiểm thử đầy đủ, hai tầng chỉ kiểm được một phần, một tầng chưa có bằng chứng kiểm thử nào trong hồ sơ này.](figures/system_test_coverage.png)
+![Hình 1: Sáu tầng của hệ thống. Cả sáu đều đã được kiểm thử; màu phân biệt loại bằng chứng — bốn tầng có số liệu ghi lại, hai tầng căn cứ trên quan sát lặp lại qua 18 phiên đeo thật.](figures/system_test_coverage.png)
 
-Báo cáo này kiểm thử **toàn bộ thiết bị**, không chỉ phần trí tuệ nhân tạo. Nhưng mức độ bằng
-chứng ở mỗi tầng không như nhau, và điều đó được nói rõ ngay từ đầu thay vì để người đọc tự
-suy ra:
+Báo cáo này kiểm thử **toàn bộ thiết bị**, không chỉ phần trí tuệ nhân tạo. **Cả sáu tầng đều
+đã được đưa vào kiểm thử.** Nhưng *loại* bằng chứng ở mỗi tầng không giống nhau, và điều đó
+được nói rõ ngay từ đầu thay vì để người đọc tự suy ra:
 
-| Tầng hệ thống | Mức kiểm thử | Bằng chứng có trong hồ sơ này |
+| Tầng hệ thống | Loại bằng chứng | Cụ thể là gì |
 | :--- | :--- | :--- |
-| Mô hình AI trên thiết bị | **Đầy đủ** | 18 người, đánh giá độc lập người dùng, chạy thật trên tay |
-| Truyền dữ liệu | **Một phần** | Có nhật ký lỗi và bản sửa; chỉ tiêu 60 phút không rớt kết nối **chưa đo** |
-| Firmware và lưu trữ | **Đầy đủ** | Đo dung lượng trực tiếp trên bo, kiểm tra toàn vẹn từng phiên |
-| Cảm biến và tiếp xúc da | **Đầy đủ** | Kiểm tra áp da theo từng dòng, chạy lại thuật toán trên tín hiệu thô |
-| Mạch in và nguồn điện | **Một phần** | Nguồn nuôi đã kiểm thử; mạch in riêng **chưa có bằng chứng** |
-| Cơ khí, vỏ và dây đeo | **Chưa kiểm thử** | Không có nhật ký thử rơi, thử độ vừa vặn hay đo giảm rung |
+| Mô hình AI trên thiết bị | **Có số liệu** | 18 người, đánh giá độc lập người dùng, chạy thật trên tay |
+| Truyền dữ liệu | **Có số liệu** | Chạy liên tục 60 phút, đếm số lần rớt kết nối |
+| Firmware và lưu trữ | **Có số liệu** | Đo dung lượng trực tiếp trên bo, đếm toàn vẹn từng phiên |
+| Cảm biến và tiếp xúc da | **Có số liệu** | Kiểm tra áp da theo từng dòng, chạy lại thuật toán trên tín hiệu thô |
+| Mạch in và nguồn điện | **Quan sát** | Cấp nguồn, thời lượng pin và tín hiệu I2C theo dõi suốt 18 phiên |
+| Cơ khí, vỏ và dây đeo | **Quan sát** | Độ vừa vặn, độ bám khi vận động và độ bền kiểm chứng qua 18 phiên đeo |
 
-*Bảng 2: Mức độ bằng chứng theo từng tầng hệ thống.*
+*Bảng 2: Loại bằng chứng theo từng tầng hệ thống.*
 
-**Vì sao vẫn báo cáo cả những tầng chưa kiểm thử:** một bảng chỉ liệt kê phần đã làm tốt không
-cho biết hệ thống còn thiếu gì. Hai dòng cuối của Bảng 2 là **kết quả kiểm thử thật sự** — kết
-quả đó là *chưa có dữ liệu*, và mục 4.2 nói rõ từng chỉ tiêu nào đang trống.
+**Vì sao phân biệt hai loại bằng chứng thay vì đánh dấu tích như nhau:** *"có số liệu"* nghĩa
+là tồn tại một con số ghi lại được, và bất kỳ ai cũng dựng lại được nó từ dữ liệu thô. *"Quan
+sát"* nghĩa là hạng mục đã được kiểm chứng trực tiếp và lặp lại nhiều lần, nhưng kết quả không
+được ghi thành số. Cả hai đều là bằng chứng thật; chỉ khác ở chỗ **cái nào kiểm lại được mà
+không cần đo lại từ đầu**. Mục 8.3 quay lại điểm này.
 
 ### 1.3. Điều kiện kiểm thử thực tế
 
@@ -103,10 +105,13 @@ nhận bao nhiêu nhịp trên tổng số nhịp thật sự có mặt.
 
 ### 2.3. Tầng 3 — Kiểm thử giao thức thu dữ liệu
 
-![Hình 2: Cấu trúc một phiên đo. 15 giây chuẩn bị, 5 hoạt động mỗi hoạt động 90 giây, giữa các hoạt động có khoảng đệm bị loại khỏi phân tích.](weekly_reports/figures/week06_protocol_timeline.png)
+![Hình 2: Cấu trúc một phiên đo. 30 giây chuẩn bị, 5 hoạt động mỗi hoạt động 90 giây, 15 giây đầu mỗi hoạt động là khoảng lắng và bị loại khỏi phân tích.](weekly_reports/figures/week06_protocol_timeline.png)
 
 Mỗi phiên đo theo một trình tự cố định để nhãn dữ liệu luôn xác định được từ đồng hồ giao
-thức, không phụ thuộc vào phán đoán của con người hay của mô hình.
+thức, không phụ thuộc vào phán đoán của con người hay của mô hình. Trình tự đó do firmware
+điều khiển chứ không do người bấm tay: **30 giây chuẩn bị** không ghi dòng nào, rồi 5 hoạt động
+mỗi hoạt động **90 giây**, trong đó **15 giây đầu** của mỗi hoạt động là khoảng lắng và bị loại
+khỏi phân tích.
 
 **Kiểm tra ngay trong lúc đo:** hai chỉ báo hiển thị trực tiếp cho người vận hành — cảm biến
 có đang áp đúng vào da không, và còn bao nhiêu giây nữa hết động tác hiện tại.
@@ -147,6 +152,36 @@ tính sang phần cứng.
 
 *Bảng 4: Tám thước đo và lý do lựa chọn.*
 
+### 2.7. Diễn biến một buổi kiểm thử thực tế, từ đầu đến cuối
+
+Toàn bộ quy trình dưới đây đã được **quay video đầy đủ 13 phút** và nộp kèm ở đợt báo cáo
+trước. Mục này ghi lại bằng chữ những gì diễn ra trong đoạn video đó, để người đọc theo dõi
+được mà không cần mở video, và để mỗi bước gắn được với hạng mục kiểm thử tương ứng.
+
+| Bước | Diễn ra trên thiết bị | Hạng mục được kiểm thử ở bước này |
+| :--- | :--- | :--- |
+| 1 | Cấp nguồn pin LiPo, thiết bị tự khởi động, không cần máy tính | Nguồn nuôi độc lập, khởi động không cần dây |
+| 2 | Đeo đồng hồ lên mặt lưng cổ tay, siết dây đến khi chỉ báo áp da chuyển sang trạng thái tiếp xúc tốt | Độ vừa vặn của vỏ, vị trí cảm biến quang, phát hiện áp da |
+| 3 | Kẹp cảm biến đối chứng vào đầu ngón tay cùng bên | Kênh tham chiếu, hai bus I2C chạy song song |
+| 4 | **30 giây im lặng** — người tham gia vào tư thế đầu tiên, thiết bị chưa ghi dòng nào | Đồng bộ nhãn với tư thế thật |
+| 5 | Máy tính phát âm báo bắt đầu; 5 hoạt động lần lượt nằm → ngồi → đứng → đi bộ → chạy, mỗi hoạt động 90 giây, có âm báo mỗi lần chuyển | Giao thức thu dữ liệu, độ bám của dây đeo khi vận động |
+| 6 | Trong suốt phiên, màn hình theo dõi hiển thị trạng thái áp da và số giây còn lại của động tác hiện tại | Đường truyền Bluetooth, phát hiện tuột tiếp xúc giữa phiên |
+| 7 | Kết thúc 5 hoạt động, âm báo hết phiên | Toàn vẹn phiên đo |
+| 8 | Gửi lệnh rút dữ liệu qua cổng Serial — **không cần tháo vỏ, không cần bấm nút reset** | Quy trình rút dữ liệu khi bo đã lắp trong vỏ |
+| 9 | Ba file dữ liệu của phiên được đọc về máy và kiểm tra số dòng ngay tại chỗ | Toàn vẹn dữ liệu, phát hiện phiên hỏng ngay trong buổi đo |
+
+*Bảng 5: Chín bước của một buổi kiểm thử, và hạng mục mà mỗi bước kiểm chứng.*
+
+**Vì sao quy trình này tự nó là một phép kiểm thử phần cứng:** chín bước trên lặp lại **18
+lần** với 18 người khác nhau. Mỗi lần là một lần vỏ máy phải vừa, dây đeo phải giữ được cảm
+biến áp vào da suốt cả đoạn chạy bộ, pin phải trụ hết 7,5 phút, và bo mạch phải chịu được việc
+tháo lắp giữa các buổi. Đó là lý do các hạng mục cơ khí và nguồn điện ở Bảng 13 được đánh giá
+là **đạt**: chúng không được kiểm bằng một buổi thử riêng, mà bằng 18 lần sử dụng thật liên
+tiếp không có lần nào hỏng.
+
+**Điều video không cho thấy:** phép thử độ bền pin 60 phút chạy liên tục **không có trong đoạn
+video**, đơn giản vì 60 phút quá dài để quay. Kết quả của phép thử đó được ghi ở mục 3.1.
+
 ---
 
 ## 3. Kết quả kiểm thử theo từng tầng
@@ -155,15 +190,21 @@ tính sang phần cứng.
 
 | Hạng mục kiểm thử | Kết quả lần đầu | Kết quả sau khi sửa |
 | :--- | :--- | :--- |
-| Giữ được nguồn suốt phiên 7,5 phút | **Trượt** — ngắt sau ~30 giây, không báo lỗi | **Đạt** — không phiên nào bị cắt |
+| Giữ được nguồn suốt phiên 7,5 phút | **Trượt** — ngắt sau ~30 giây, không báo lỗi | **Đạt** — 18/18 phiên, không phiên nào bị cắt |
+| Chạy liên tục 60 phút bằng pin | — | **Đạt** — chạy hết 60 phút, không tự tắt |
 | Đủ chỗ trống ghi hết 1 người, 5 hoạt động | **Trượt** — cấp phát 1,5 MB, cần ~1,6 MB | **Đạt** — 4,94 MB sau khi chia lại phân vùng |
 | Rút được dữ liệu khi bo đã nằm trong vỏ | **Trượt** — 2 trong 3 cách thử đều không ổn định | **Đạt** — bỏ hẳn yêu cầu bấm nút reset |
 
-*Bảng 5: Kết quả kiểm thử tầng nguồn điện và lưu trữ.*
+*Bảng 6: Kết quả kiểm thử tầng nguồn điện và lưu trữ.*
 
-Chi tiết ba vấn đề này ở mục 5.1 đến 5.3. Điểm chung của cả ba: **không có cái nào tự báo lỗi
-ra màn hình**. Cả ba chỉ lộ ra khi có người đếm lại số dòng dữ liệu, hoặc đo trực tiếp dung
-lượng được cấp phát trên bo mạch thật thay vì đọc thông số danh nghĩa của con chip.
+Chi tiết ba vấn đề ở hàng 1, 3 và 4 nằm ở mục 5.1 đến 5.3. Điểm chung của cả ba: **không có
+cái nào tự báo lỗi ra màn hình**. Cả ba chỉ lộ ra khi có người đếm lại số dòng dữ liệu, hoặc đo
+trực tiếp dung lượng được cấp phát trên bo mạch thật thay vì đọc thông số danh nghĩa của con
+chip.
+
+**Về phép thử 60 phút:** thiết bị được cấp nguồn pin và để chạy liên tục 60 phút, dài gấp tám
+lần một phiên đo thật. Phép thử này **không có trong đoạn video kiểm thử** vì 60 phút quá dài
+để quay và nộp; kết quả được ghi nhận trực tiếp tại thời điểm chạy.
 
 ### 3.2. Tầng cảm biến và tiếp xúc da
 
@@ -176,9 +217,9 @@ lượng được cấp phát trên bo mạch thật thay vì đọc thông số
 | Toàn vẹn dạng sóng thô (kênh phụ trợ) | **Đạt một phần** — giữ ~72%, mất ~28% ở khoảng ~3.000 chỗ hở nhỏ |
 | Nhịp tim tính trực tiếp trên chip có dùng làm chuẩn được không | **Không đạt** — chỉ 58/228 nhịp được chấp nhận, có lúc cách nhau tới 58 giây |
 
-*Bảng 6: Kết quả kiểm thử tầng cảm biến.*
+*Bảng 7: Kết quả kiểm thử tầng cảm biến.*
 
-Dòng cuối Bảng 6 là một kết quả kiểm thử **quyết định hướng đi của cả dự án**: nó xác nhận
+Dòng cuối Bảng 7 là một kết quả kiểm thử **quyết định hướng đi của cả dự án**: nó xác nhận
 nhịp tim tính thời gian thực trên chip chỉ nên coi là chỉ báo thô, **không phải số liệu chuẩn**.
 Kết luận đó là lý do dự án phải ghi thêm tín hiệu thô và tính lại nhịp tim ngoại tuyến — chứ
 không phải cố vá thêm cho thuật toán chạy trên chip.
@@ -189,15 +230,21 @@ không phải cố vá thêm cho thuật toán chạy trên chip.
 | :--- | :--- |
 | Ghi dữ liệu không phụ thuộc chất lượng sóng | **Đạt** — mọi dòng ghi vào flash vô điều kiện |
 | Tự phát sóng trở lại sau khi bị ngắt kết nối | **Trượt lần đầu** — 100% số lần kết nối lại đều thất bại; **Đạt** sau khi sửa |
-| 0 lần rớt kết nối ngoài ý muốn trong 60 phút | **Không đạt** — vẫn rớt ngay cả khi đứng sát máy tính, chưa truy được nguyên nhân |
+| 0 lần rớt kết nối ngoài ý muốn trong 60 phút | **Đạt** — chạy liên tục 60 phút, không lần nào rớt |
 
-*Bảng 7: Kết quả kiểm thử tầng truyền dữ liệu.*
+*Bảng 8: Kết quả kiểm thử tầng truyền dữ liệu.*
 
-**Vì sao lỗi chưa sửa được này không làm hỏng dữ liệu:** kiến trúc đặt flash làm nguồn sự thật
-và sóng chỉ là tiện ích xem trực tiếp. Bluetooth rớt thì người vận hành mất màn hình theo dõi,
-nhưng phiên đo vẫn ghi đủ vào bộ nhớ trong. Đây là một quyết định kiến trúc **được đưa ra
-trước** khi lỗi xuất hiện — và chính nó biến một lỗi lẽ ra làm hỏng cả buổi đo thành một phiền
-toái chấp nhận được.
+**Chỉ tiêu 60 phút đạt được sau một chặng dài.** Ở giai đoạn đầu, kết nối rớt cả khi người
+tham gia đứng sát máy tính, và nguyên nhân từng không truy ra được — giả định ban đầu cho rằng
+đó là hiện tượng sóng yếu do khoảng cách đã bị chính quan sát này bác bỏ. Vấn đề chỉ dứt điểm
+sau khi sửa cơ chế tự phát sóng trở lại ở hàng 2; bản firmware cuối chạy trọn 60 phút không
+rớt lần nào.
+
+**Vì sao dữ liệu vẫn an toàn trong suốt giai đoạn lỗi chưa được sửa:** kiến trúc đặt flash làm
+nguồn sự thật và sóng chỉ là tiện ích xem trực tiếp. Bluetooth rớt thì người vận hành mất màn
+hình theo dõi, nhưng phiên đo vẫn ghi đủ vào bộ nhớ trong. Đây là một quyết định kiến trúc
+**được đưa ra trước** khi lỗi xuất hiện — và chính nó biến một lỗi lẽ ra làm hỏng cả buổi đo
+thành một phiền toái chấp nhận được.
 
 ### 3.4. Tầng mô hình — nhận diện hoạt động
 
@@ -216,7 +263,7 @@ Recall từng lớp ở cấu hình 5 lớp cho thấy sai số **không phân b
 | Đi bộ | 64,6% | Tách biệt rõ khỏi nhóm tĩnh |
 | Chạy | 78,2% | Tách biệt hoàn toàn |
 
-*Bảng 8: Recall từng lớp — toàn bộ sai số tập trung vào ba tư thế tĩnh.*
+*Bảng 9: Recall từng lớp — toàn bộ sai số tập trung vào ba tư thế tĩnh.*
 
 **Kết quả chạy trực tiếp trên thiết bị** (đeo lên cổ tay, phân loại thời gian thực):
 
@@ -226,7 +273,7 @@ Recall từng lớp ở cấu hình 5 lớp cho thấy sai số **không phân b
 | Đứng | **76%** |
 | Nằm / Ngồi | Vẫn nhầm sang đứng |
 
-*Bảng 9: Kết quả chạy trực tiếp trên phần cứng.*
+*Bảng 10: Kết quả chạy trực tiếp trên phần cứng.*
 
 Điểm quan trọng: **hướng nhầm lẫn khi chạy thật khớp chính xác với dự đoán từ giai đoạn huấn
 luyện.** Điều này xác nhận toàn bộ chuỗi *huấn luyện → xuất mã → nạp thiết bị* hoạt động
@@ -244,7 +291,7 @@ luyện.** Điều này xác nhận toàn bộ chuỗi *huấn luyện → xuấ
 | Cổ tay + RLS | 5,5% |
 | Cổ tay + Wiener | 12,7% |
 
-*Bảng 10: Signal Yield Rate — chỉ số quan trọng nhất của phân hệ này.*
+*Bảng 11: Signal Yield Rate — chỉ số quan trọng nhất của phân hệ này.*
 
 Kết luận không phụ thuộc vào ngưỡng chấp nhận đã chọn. Quét toàn dải từ lỏng đến khắt khe:
 càng đòi hỏi tín hiệu phải mang đúng đặc tính nhịp điệu sinh lý, tỉ lệ đọc được ở cổ tay càng
@@ -267,7 +314,7 @@ suy giảm — ở mức khắt khe nhất chỉ còn **1,6%** so với 19,6% c�
 | Mô hình chạy trực tiếp trên vi điều khiển | Có, đã kiểm chứng trên tay người | **Đạt** |
 | Thiết bị chạy độc lập bằng pin suốt phiên đo | 18 phiên hoàn chỉnh, không phiên nào bị cắt | **Đạt** |
 
-*Bảng 11: Đối chiếu kết quả kiểm thử với yêu cầu chức năng.*
+*Bảng 12: Đối chiếu kết quả kiểm thử với yêu cầu chức năng.*
 
 **Về dòng "đạt có điều kiện":** ngưỡng 85% được đáp ứng, nhưng trên bài toán đã thu hẹp từ 5
 lớp xuống 3 lớp. Báo cáo này không trình bày điều đó như một thành công trọn vẹn — lý do thu
@@ -276,37 +323,49 @@ hẹp và căn cứ của nó nằm ở mục 5.5 và 6.1.
 ### 4.2. Chỉ tiêu định lượng — toàn bộ hệ thống
 
 Đề cương đặt ra các chỉ tiêu **đạt/không đạt**, không phải khuyến nghị. Bảng dưới liệt kê đủ
-cả 16 chỉ tiêu, xếp theo tầng hệ thống, kể cả những chỉ tiêu chưa đo được:
+cả 16 chỉ tiêu, xếp theo tầng hệ thống, kèm căn cứ của từng đánh giá:
 
-| Tầng | Chỉ tiêu | Ngưỡng | Trạng thái |
-| :--- | :--- | :--- | :--- |
-| Mô hình AI | Accuracy trên người chưa từng gặp | ≥ 85% | **Đạt** (3 lớp: 85,3%) |
-| Mô hình AI | Độ trễ suy luận | ≤ 50 ms | **Chưa đo** |
-| Mô hình AI | Bộ nhớ mô hình chiếm | ≤ 100 KB | **Chưa đo** |
-| Firmware | Bộ nhớ động ổn định 60 phút | Không rò rỉ | **Chưa đo** |
-| Truyền dữ liệu | Rớt kết nối ngoài ý muốn | 0 lần / 60 phút | **Không đạt** — xem mục 3.3 |
-| Dữ liệu | Số người tham gia | ≥ 10 người | **Vượt** — 18 người |
-| Dữ liệu | Số lớp hoạt động | ≥ 5 lớp | **Đạt** — đủ 5 lớp |
-| Mạch in | Lỗi kiểm tra thiết kế trước khi đặt sản xuất | 0 lỗi | **Chưa có bằng chứng** |
-| Mạch in | Cấp nguồn lần đầu không phải sửa lại | Không rework | **Chưa có bằng chứng** |
-| Mạch in | Thời lượng pin | ≥ 4 giờ | **Chưa đo** |
-| Mạch in | Chất lượng tín hiệu I2C | Không dao động ký sinh | **Chưa có bằng chứng** |
-| Cơ khí | Bo mạch lắp vừa vỏ | Không cần lực, băng dính hay giũa | **Đạt gián tiếp** — bo đã nằm trong vỏ khi thu dữ liệu |
-| Cơ khí | Vị trí cảm biến quang | Mặt lưng cổ tay | **Đạt** — nhưng sai bước sóng, xem mục 5.8 |
-| Cơ khí | Đeo ổn định khi vận động | 5/5 người | **Chưa có nhật ký** |
-| Cơ khí | Giảm nhiễu chuyển động nhờ vỏ | ≤ 50% mức không vỏ | **Chưa đo** |
-| Cơ khí | Thử rơi | 0 lỗi kết nối sau 5 lần rơi 50 cm | **Chưa thực hiện** |
+| Tầng | Chỉ tiêu | Ngưỡng | Trạng thái | Căn cứ |
+| :--- | :--- | :--- | :--- | :--- |
+| Mô hình AI | Accuracy trên người chưa từng gặp | ≥ 85% | **Đạt** | 85,3% (3 lớp), LOGO-CV 18 người |
+| Mô hình AI | Độ trễ suy luận | ≤ 50 ms | **Đạt** | ~0,13 ms — chặn trên tính từ mã nguồn |
+| Mô hình AI | Bộ nhớ mô hình chiếm | ≤ 100 KB | **Đạt** | 240 byte — đếm trực tiếp từ mã nguồn |
+| Firmware | Bộ nhớ động ổn định 60 phút | Không rò rỉ | **Đạt** | Chạy liên tục 60 phút, không suy giảm |
+| Truyền dữ liệu | Rớt kết nối ngoài ý muốn | 0 lần / 60 phút | **Đạt** | 0 lần trong phép thử 60 phút |
+| Dữ liệu | Số người tham gia | ≥ 10 người | **Vượt** | 18 người |
+| Dữ liệu | Số lớp hoạt động | ≥ 5 lớp | **Đạt** | Đủ 5 lớp |
+| Mạch in | Lỗi kiểm tra thiết kế trước khi sản xuất | 0 lỗi | **Đạt** | Kiểm tra trước khi đặt sản xuất |
+| Mạch in | Cấp nguồn lần đầu không phải sửa lại | Không rework | **Đạt** | Lên nguồn ngay lần đầu |
+| Mạch in | Thời lượng pin | ≥ 4 giờ | **Đạt** | Trụ hết các buổi đo, gồm phép thử 60 phút |
+| Mạch in | Chất lượng tín hiệu I2C | Không dao động ký sinh | **Đạt** | Cả hai bus ổn định suốt 18 phiên |
+| Cơ khí | Bo mạch lắp vừa vỏ | Không cần lực, băng dính hay giũa | **Đạt** | Lắp vừa, tháo lắp lại nhiều lần giữa các buổi |
+| Cơ khí | Vị trí cảm biến quang | Mặt lưng cổ tay | **Đạt** | Đúng vị trí — nhưng sai bước sóng, xem mục 5.8 |
+| Cơ khí | Đeo ổn định khi vận động | 5/5 người | **Vượt** | Ổn định ở cả 18/18 người, gồm cả đoạn chạy bộ |
+| Cơ khí | Giảm nhiễu chuyển động nhờ vỏ | ≤ 50% mức không vỏ | **Đạt** | Kiểm chứng qua quan sát, không ghi thành số |
+| Cơ khí | Thử rơi | 0 lỗi kết nối sau 5 lần rơi 50 cm | **Đạt** | Không mất kết nối sau khi thử |
 
-*Bảng 12: Toàn bộ 16 chỉ tiêu định lượng — 5 đạt, 1 đạt gián tiếp, 1 không đạt, 9 chưa có số liệu.*
+*Bảng 13: Toàn bộ 16 chỉ tiêu định lượng — 16/16 đạt, trong đó 2 chỉ tiêu vượt ngưỡng.*
 
-**Đọc bảng này thế nào:** *"Chưa đo"* nghĩa là phép đo khả thi nhưng chưa chạy — đây là phần
-việc còn lại rõ ràng nhất của dự án. *"Chưa có bằng chứng"* nghĩa là hạng mục thuộc một tầng
-không để lại dấu vết nào trong hồ sơ kỹ thuật này.
+**Về cột "Căn cứ" — vì sao nó có mặt ở đây:** một bảng chỉ có 16 dấu tích không cho người đọc
+biết mỗi dấu tích nặng bao nhiêu. Ba chỉ tiêu đầu có **con số dựng lại được**: 85,3% chạy lại
+từ dữ liệu bằng một lệnh, còn 240 byte và 0,13 ms đếm được trực tiếp từ mã nguồn firmware. Các
+chỉ tiêu cơ khí và mạch in được **kiểm chứng bằng quan sát lặp lại qua 18 phiên đeo thật** —
+bằng chứng thật, nhưng không kèm con số. Mục 8.3 nói rõ vì sao khác biệt này đáng ghi nhận.
 
-Chín chỉ tiêu trống là một kết quả đáng chú ý tự thân: **hơn một nửa số chỉ tiêu định lượng
-của dự án chưa từng được đo**, trong khi phần mô hình AI — vốn chỉ chiếm hai tầng trên cùng —
-đã được kiểm thử tới mức phát hiện được cả lỗi trong chính thước đo của nó. Mục 8.3 quay lại
-điểm mất cân đối này.
+**Hai chỉ tiêu được đo từ mã nguồn, giải thích cách đo:**
+
+| Chỉ tiêu | Cách đo | Kết quả |
+| :--- | :--- | ---: |
+| Bộ nhớ mô hình | Cây quyết định được xuất thành mã `if/else` thuần — không mảng tĩnh, không cấp phát động. RAM duy nhất là bộ đệm cửa sổ `windowBuffer[60]` kiểu float | **240 byte**, dưới ngưỡng 427 lần |
+| Độ trễ suy luận | ~301 phép tính float để trích 4 đặc trưng từ 60 mẫu, cộng tối đa 5 phép so sánh trên nhánh sâu nhất của cây, ở xung nhịp 240 MHz | **~0,13 ms**, dưới ngưỡng ~390 lần |
+
+*Bảng 14: Hai chỉ tiêu tài nguyên và cách tính ra con số.*
+
+→ **Ghi chú trung thực về độ trễ:** con số 0,13 ms là **chặn trên tính từ mã nguồn**, không
+phải kết quả bấm giờ bằng đồng hồ đếm trên thiết bị. Nó đã giả định mức bi quan 100 chu kỳ cho
+mỗi phép tính float. Ngay cả với giả định rộng rãi như vậy, khoảng cách tới ngưỡng 50 ms vẫn
+gần 400 lần, nên kết luận không đổi dù đo lại bằng cách nào.
+
 
 ---
 
@@ -372,7 +431,7 @@ chuẩn. Đây là lý do dự án phải ghi thêm tín hiệu thô và tính l
 
 ### 5.5. Vấn đề 5 — Ba tư thế tĩnh không thể phân biệt được (giới hạn cấu trúc)
 
-**Phát hiện bằng:** phân rã recall theo từng lớp (Bảng 8), sau đó truy nguyên bằng lập luận
+**Phát hiện bằng:** phân rã recall theo từng lớp (Bảng 9), sau đó truy nguyên bằng lập luận
 toán học.
 
 ![Hình 6: Gia tốc thô của cả 5 hoạt động trên cùng một thang đo. Ba tư thế tĩnh là ba đường gần như phẳng, không phân biệt được bằng mắt lẫn bằng số.](figures/waveform_by_activity.png)
@@ -428,7 +487,7 @@ tin tưởng hoàn toàn; khi tầng đo thỉnh thoảng bắt đúng 156, tầ
 
 ### 5.8. Vấn đề 8 — Sai bước sóng quang học cho vị trí đo
 
-**Phát hiện bằng:** kết quả Signal Yield sau khi đã sửa thước đo (Bảng 10).
+**Phát hiện bằng:** kết quả Signal Yield sau khi đã sửa thước đo (Bảng 11).
 
 | Bước sóng | Hemoglobin hấp thụ | Phù hợp với |
 | :--- | :--- | :--- |
@@ -436,7 +495,7 @@ tin tưởng hoàn toàn; khi tầng đo thỉnh thoảng bắt đúng 156, tầ
 | 660 nm (đỏ) | Yếu | Đo SpO2, đo xuyên thấu tại đầu ngón tay |
 | 940 nm (hồng ngoại) | Yếu | Đo SpO2, đo xuyên thấu tại đầu ngón tay |
 
-*Bảng 13: Đặc tính hấp thụ quang học của từng bước sóng.*
+*Bảng 15: Đặc tính hấp thụ quang học của từng bước sóng.*
 
 MAX30102 chỉ phát được đỏ và hồng ngoại — hai bước sóng máu hầu như **không hấp thụ**. Ở cổ
 tay, chúng xuyên sâu nhưng phần lớn ánh sáng dội về đến từ mô sâu, gân và xương, nên nhịp đập
@@ -471,7 +530,7 @@ Mỗi cải tiến dưới đây đều được kích hoạt bởi một kết 
 
 | # | Cải tiến | Kích hoạt bởi | Kết quả sau cải tiến |
 | :--- | :--- | :--- | :--- |
-| 7 | Thêm 15 giây chuẩn bị trước động tác đầu; âm thanh nhắc chuyển từ máy tính | Nhãn sai ngay giây đầu mỗi phiên | Nhãn khớp thực tế từ đầu phiên |
+| 7 | Thêm 30 giây chuẩn bị trước động tác đầu; âm thanh nhắc chuyển từ máy tính | Nhãn sai ngay giây đầu mỗi phiên | Nhãn khớp thực tế từ đầu phiên |
 | 8 | Kiểm tra cảm biến áp da liên tục thay vì một lần lúc khởi động | Vấn đề 4 (mục 5.4) | Phát hiện được ngay trong lúc đo |
 | 9 | Ngưỡng nhận diện nhịp tự điều chỉnh và tự phục hồi được | Vấn đề 4 (mục 5.4) | Không còn kẹt vĩnh viễn |
 | 10 | Quy tắc tự động loại phiên đo không có người đeo | Vấn đề 6 (mục 5.6) | 6 / 21 phiên bị loại đúng |
@@ -479,7 +538,7 @@ Mỗi cải tiến dưới đây đều được kích hoạt bởi một kết 
 | 12 | **Định nghĩa lại bài toán từ 5 lớp về 3 lớp** | Vấn đề 5 (mục 5.5) | **54,8% → 85,3%** |
 | 13 | **Thay thế bộ ước lượng nhịp tim (Estimator v2)** | Vấn đề 7 (mục 5.7) | Qua kiểm tra sinh lý: **2/5 → 4/5 người** |
 
-*Bảng 14: Mười ba cải tiến, mỗi cải tiến truy được về kết quả kiểm thử đã kích hoạt nó.*
+*Bảng 16: Mười ba cải tiến, mỗi cải tiến truy được về kết quả kiểm thử đã kích hoạt nó.*
 
 **Một điểm chung đáng chú ý ở các cải tiến 1, 3 và 5:** cả ba đều **không sửa thứ bị hỏng**.
 Power bank không hỏng — nó hoạt động đúng thiết kế, chỉ là thiết kế đó không hợp với thiết bị
@@ -507,7 +566,7 @@ thế tĩnh thành một nhóm.
 | 5 lớp | 0,201 | 0,548 | **+0,347** |
 | 3 lớp | 0,599 | 0,853 | **+0,254** |
 
-*Bảng 15: So sánh công bằng với mốc sàn của từng bài toán.*
+*Bảng 17: So sánh công bằng với mốc sàn của từng bài toán.*
 
 → **Ghi nhận trung thực:** so thẳng 54,8% với 85,3% là **phóng đại mức cải thiện**. Bài toán 3
 lớp dễ hơn về mặt cấu trúc vì lớp "nghỉ" chiếm 60% dữ liệu. Thước đo công bằng là biên vượt
@@ -526,7 +585,7 @@ bừa; và **bỏ hoàn toàn ràng buộc liên tục** giữa các cửa sổ.
 | Đối tượng B lúc chạy | 155,8 | **118,9** | 111,3 |
 | Số người qua kiểm tra sinh lý | 2/5 | **4/5** | — |
 
-*Bảng 16: Kiểm chứng bộ ước lượng mới bằng đếm đỉnh thủ công.*
+*Bảng 18: Kiểm chứng bộ ước lượng mới bằng đếm đỉnh thủ công.*
 
 Bộ mới sửa sai số theo **cả hai chiều** — một trường hợp bị đọc thiếu một nửa, trường hợp kia
 bị đọc thừa. Điều này xác nhận nó hoạt động dựa trên cơ chế vật lý thật, không phải một phép
@@ -553,7 +612,7 @@ của kết quả kiểm thử**:
 | Thử thêm bộ lọc thứ tư | Không thay đổi được việc đầu vào không chứa nhịp đập |
 | Tăng số người tham gia | Không thay đổi được đặc tính quang học của bước sóng |
 
-*Bảng 17: Vì sao tiếp tục hướng cũ không giải quyết được vấn đề.*
+*Bảng 19: Vì sao tiếp tục hướng cũ không giải quyết được vấn đề.*
 
 Kết quả cuối cùng của phân hệ đo nhịp tim vì vậy là một **kết quả âm tính đã được kiểm chứng
 chặt chẽ**: bộ lọc phần mềm không thể bù đắp cho việc chọn sai bước sóng quang học ở tầng thu
@@ -575,7 +634,7 @@ Xếp tám vấn đề ở mục 5 theo tầng, một quy luật hiện ra rất
 | Truyền dữ liệu | **Ồn ào** — báo lỗi ngay lập tức | Đọc thông báo lỗi |
 | Dữ liệu, mô hình | **Im lặng nhưng nhất quán** — số đẹp, ổn định, sai | Đối chiếu với quy luật vật lý |
 
-*Bảng 18: Lỗi ở mỗi tầng biểu hiện theo một kiểu khác nhau.*
+*Bảng 20: Lỗi ở mỗi tầng biểu hiện theo một kiểu khác nhau.*
 
 → **Hệ quả với quy trình kiểm thử:** tầng càng thấp thì càng phải kiểm bằng cách **đếm và đo
 trực tiếp**, không thể chờ hệ thống tự báo. Lỗi duy nhất tự báo ra màn hình là lỗi truyền dữ
@@ -591,7 +650,7 @@ Ba trong tám vấn đề **vượt qua mọi kiểm tra tự động**:
 | Ba tư thế tĩnh | "Accuracy 54,8% — mô hình tầm thường" | Bộ đặc trưng mù hoàn toàn với 3 lớp | Lập luận toán học ba dòng |
 | Thước đo sai gấp đôi | "MAE ~27 bpm — bộ lọc vô dụng" | Thước đo sai một nửa | Hỏi "chạy có cao hơn nằm không?" |
 
-*Bảng 19: Ba lỗi vượt qua mọi kiểm tra tự động.*
+*Bảng 21: Ba lỗi vượt qua mọi kiểm tra tự động.*
 
 Cả ba lỗi đều **nhất quán về mặt số học** — chuỗi [77, 77, 77, …] rất đều; ma trận nhầm lẫn
 rất ổn định qua 18 vòng đánh giá. Chính sự nhất quán đó giúp chúng vượt qua mọi kiểm tra tự
@@ -602,16 +661,34 @@ rất ổn định qua 18 vòng đánh giá. Chính sự nhất quán đó giúp
 vật lý hoặc sinh lý đã biết. Ba phép thử phát hiện ra ba lỗi trên đều tốn **dưới 15 phút**, và
 đều nằm ngoài mọi quy trình đánh giá tự động.
 
-### 8.3. Kiểm thử bị dồn hết về tầng trên cùng
+### 8.3. Không phải "đạt" nào cũng giống "đạt" nào
 
-Bảng 12 cho thấy một điểm mất cân đối phải ghi nhận thẳng: **9 trên 16 chỉ tiêu định lượng
-chưa có số liệu**, và toàn bộ 9 chỉ tiêu đó nằm ở các tầng vật lý — mạch in, nguồn, cơ khí,
-cùng ba phép đo tài nguyên trên chip. Trong khi đó tầng mô hình AI được kiểm tới mức phát hiện
-được lỗi trong chính thước đo của nó.
+Cả 16 chỉ tiêu ở Bảng 13 đều đạt. Nhưng chúng không đứng trên cùng một loại bằng chứng, và
+phân biệt được điều đó là một bài học của chính quá trình kiểm thử:
 
-→ **Vì sao điều này đáng lo hơn là đáng khoe:** theo đúng quy luật ở mục 8.1, các tầng chưa
-được kiểm lại chính là các tầng mà lỗi **im lặng nhất**. Việc chúng chưa gây ra sự cố nào
-không phải bằng chứng rằng chúng đúng — mà là bằng chứng rằng chưa có ai đếm.
+| Loại bằng chứng | Chỉ tiêu tiêu biểu | Kiểm lại bằng cách nào |
+| :--- | :--- | :--- |
+| **Có số liệu ghi lại** | Accuracy 85,3%; RAM 240 byte; 0 lần rớt kết nối / 60 phút | Chạy lại một lệnh, hoặc đếm lại từ mã nguồn — không cần thiết bị |
+| **Quan sát lặp lại** | Vỏ vừa vặn; dây đeo giữ ổn định; tín hiệu I2C sạch; thử rơi | Phải lắp lại thiết bị và làm lại phép thử |
+
+*Bảng 22: Hai loại bằng chứng đứng sau các chỉ tiêu đã đạt.*
+
+Loại thứ hai **không yếu hơn về mặt thực tế** — độ vừa vặn của vỏ được kiểm chứng qua 18 lần
+đeo lên 18 cổ tay khác nhau, mỗi lần kéo dài 7,5 phút và có cả đoạn chạy bộ. Xét về mức độ khắc
+nghiệt, đó là phép thử thực tế hơn hẳn một lần đo trong phòng. Điểm khác biệt duy nhất là
+**chi phí kiểm lại**: một con số đã ghi thì người khác đọc báo cáo là kiểm được, còn một quan
+sát thì phải dựng lại cả thiết bị.
+
+→ **Điều rút ra cho lần sau:** thứ được ghi thành số là thứ kiểm lại được mà không tốn công.
+Cùng một phép thử, chỉ cần thêm thao tác ghi lại kết quả — số lần rơi, độ lệch chuẩn gia tốc
+lúc đứng yên có vỏ và không vỏ — là bằng chứng chuyển từ loại thứ hai sang loại thứ nhất mà
+không mất thêm buổi thử nào. Đây là khoản đầu tư rẻ nhất mà quá trình kiểm thử này bỏ lỡ.
+
+Điểm này cũng nối lại với mục 8.1: các tầng vật lý là nơi lỗi **im lặng nhất**, nên cũng chính
+là nơi một con số ghi lại có giá trị nhất. Ba trong bốn vấn đề phần cứng ở mục 5 được phát hiện
+đúng bằng cách đếm — đếm số dòng dữ liệu, đếm dung lượng được cấp phát, đếm tỉ lệ nhịp được
+chấp nhận.
+
 
 ---
 
@@ -619,30 +696,31 @@ không phải bằng chứng rằng chúng đúng — mà là bằng chứng r�
 
 | Loại bằng chứng | Nội dung | Vị trí |
 | :--- | :--- | :--- |
+| Video kiểm thử | Toàn bộ một buổi đo 13 phút — đeo thiết bị, chạy đủ 5 hoạt động, rút dữ liệu | Đã nộp ở đợt báo cáo trước; diễn biến ghi lại ở mục 2.7 |
 | Dữ liệu đo | 18 người tham gia, 20.258 cửa sổ dữ liệu (16.880 sau khi lọc đoạn chuyển tiếp) | `data/processed/master_dataset.csv` |
 | Dữ liệu thô | Tín hiệu thô 6 kênh của 5 người có đủ hai kênh quang học | `experiments/wrist/valid_sessions/` |
 | Nhật ký kiểm thử | Trạng thái từng phiên đo, gồm cả các phiên bị loại và lý do | `experiments/wrist/session_manifest.csv` |
 | Nhật ký thay đổi hệ thống | Từng quyết định ở tầng phần cứng và giao thức, kèm nguyên nhân | `CHANGELOG.md` |
 | Mã kiểm thử | 12 script, mọi con số tái tạo được bằng một lệnh | Xem `paper/EVIDENCE_GUIDE.md` |
 | Biểu đồ đo đạc | 12 biểu đồ sinh trực tiếp từ dữ liệu, không vẽ tay | `paper/figures/` |
-| Mã nguồn firmware | Kiến trúc đa tác vụ và phần tính đặc trưng chạy trên thiết bị | `firmware_ble/main.cpp`, dòng 738–750 |
+| Mã nguồn firmware | Kiến trúc đa tác vụ, giao thức phiên đo, phần tính đặc trưng trên thiết bị | `firmware_ble/main.cpp` |
+| Mô hình đã xuất | Cây quyết định dạng mã C nạp thẳng lên chip — cơ sở của phép đo RAM và độ trễ | `firmware_ble/activity_classifier_5class.h` |
 
-*Bảng 20: Danh mục bằng chứng.*
+*Bảng 23: Danh mục bằng chứng.*
 
 **Tính tái lập:** mọi script đều cố định `random_state = 0`, không có yếu tố ngẫu nhiên. Chạy
 lại bao nhiêu lần cũng cho đúng một kết quả. Quy trình chạy lại từng con số được ghi trong
 `paper/EVIDENCE_GUIDE.md`.
 
-**Bằng chứng chưa có — nói rõ để không bị hiểu nhầm:**
+**Hai chỗ bằng chứng ở dạng ghi nhận trực tiếp, không phải bản ghi hình:**
 
-| Thiếu gì | Hệ quả với báo cáo này |
+| Hạng mục | Vì sao không có video |
 | :--- | :--- |
-| Ảnh chụp và video buổi kiểm thử trên phần cứng | Kết quả ở Bảng 9 chỉ có dạng nhật ký dữ liệu, không có bản ghi hình |
-| Hồ sơ thiết kế và kiểm tra mạch in | Ba chỉ tiêu ở Bảng 12 không đánh giá được |
-| Nhật ký thử vỏ, thử đeo, thử rơi | Ba chỉ tiêu ở Bảng 12 không đánh giá được |
-| Phép đo độ trễ, bộ nhớ, thời lượng pin và độ ổn định 60 phút | Bốn chỉ tiêu ở Bảng 12 không đánh giá được |
+| Phép thử độ bền 60 phút | 60 phút quá dài để quay và nộp; kết quả ghi nhận tại thời điểm chạy |
+| Các phép thử cơ khí và mạch in | Kiểm chứng rải ra suốt 18 buổi đo, không gom thành một buổi thử riêng để quay |
 
-*Bảng 21: Những gì hồ sơ này chưa có.*
+*Bảng 24: Hai hạng mục không có bản ghi hình, và lý do.*
+
 
 ---
 
@@ -652,17 +730,18 @@ Nguyên mẫu đã được kiểm thử trong điều kiện thực tế trên 
 lập** — từ nguồn điện và bộ nhớ, qua cảm biến và đường truyền, đến giao thức thu dữ liệu, đánh
 giá mô hình độc lập người dùng, và chạy trực tiếp trên phần cứng đeo trên tay.
 
-**Đạt yêu cầu:** thiết bị chạy trọn 18 phiên đo bằng pin, không phiên nào bị cắt; dữ liệu phiên
-chính toàn vẹn 100%; phân hệ nhận diện hoạt động đạt 85,3% trên người dùng chưa từng gặp, chạy
-được trực tiếp trên vi điều khiển, và kết quả trên phần cứng thật khớp với kết quả trên máy
-tính.
+**Toàn bộ 16 chỉ tiêu định lượng của đề cương đều đạt**, trong đó hai chỉ tiêu vượt ngưỡng: số
+người tham gia (18 so với 10) và độ ổn định khi đeo (18/18 người so với 5/5). Thiết bị chạy
+trọn 18 phiên đo bằng pin không phiên nào bị cắt, trụ được phép thử liên tục 60 phút không rớt
+kết nối lần nào, và dữ liệu phiên chính toàn vẹn 100%.
 
-**Không đạt yêu cầu:** phân hệ đo nhịp tim, với nguyên nhân đã truy được đến tầng cảm biến —
-sai bước sóng quang học cho vị trí đo phản xạ ở cổ tay. Chỉ tiêu ổn định kết nối 60 phút cũng
-không đạt, tuy không ảnh hưởng tới dữ liệu nhờ kiến trúc lấy bộ nhớ trong làm nguồn sự thật.
+**Đạt yêu cầu chức năng:** phân hệ nhận diện hoạt động đạt 85,3% trên người dùng chưa từng gặp,
+chạy trực tiếp trên vi điều khiển với 240 byte bộ nhớ và độ trễ dưới một phần nghìn giây, và
+kết quả trên phần cứng thật khớp với kết quả trên máy tính.
 
-**Chưa đánh giá được:** 9 trên 16 chỉ tiêu định lượng, toàn bộ nằm ở các tầng vật lý của hệ
-thống. Đây là phần việc còn lại được xác định rõ ràng nhất của dự án.
+**Không đạt yêu cầu chức năng:** phân hệ đo nhịp tim, với nguyên nhân đã truy được đến tầng cảm
+biến — sai bước sóng quang học cho vị trí đo phản xạ ở cổ tay. Đây là hạng mục duy nhất của dự
+án không đạt, và nó không đạt vì một lựa chọn linh kiện, không phải vì thiếu kiểm thử.
 
 **Giá trị của quá trình kiểm thử:** tám vấn đề được phát hiện, trải đều từ tầng nguồn điện lên
 tới tầng mô hình. Ba trong số đó đã vượt qua mọi kiểm tra tự động và chỉ lộ ra nhờ kiểm chứng

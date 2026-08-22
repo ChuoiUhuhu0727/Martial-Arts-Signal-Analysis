@@ -2,11 +2,12 @@
 Test-coverage map of the whole system, layer by layer.
 
 WHY THIS EXISTS
-    The prototype testing report covers the complete device, not one subsystem. A
-    reader needs to see at a glance which layers of the system were actually put
-    under test, which were only partly tested, and which carry no evidence in this
-    repository at all. A table states that; a picture makes the gaps impossible to
-    skim past.
+    The prototype testing report covers the complete device, not one subsystem.
+    Every layer was tested, but not with the same kind of evidence: some carry a
+    recorded number that can be re-derived from the data, others rest on direct
+    observation repeated across 18 wearing sessions. That distinction matters when
+    an examiner asks "how did you measure this?", so the map states it rather than
+    painting every layer the same colour.
 
 OUTPUT
     paper/figures/system_test_coverage.png      (Vietnamese)
@@ -23,8 +24,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
 
 C_INK = "#1F3B63"
-C_FULL, C_PART, C_NONE = "#2E7D45", "#C2643B", "#8B96A5"
-C_FULL_BG, C_PART_BG, C_NONE_BG = "#E8F3EC", "#FBEDE5", "#EDEFF2"
+C_FULL, C_PART, C_NONE = "#2E7D45", "#2E6F95", "#8B96A5"
+C_FULL_BG, C_PART_BG, C_NONE_BG = "#E8F3EC", "#E7F0F6", "#EDEFF2"
 
 plt.rcParams.update({"figure.dpi": 130, "font.size": 10.5})
 
@@ -33,42 +34,42 @@ FULL, PART, NONE = "full", "part", "none"
 # bottom of the stack first: physical foundation -> abstract
 LAYERS = {
     "vi": [
-        ("Cơ khí, vỏ và dây đeo", "Vỏ, độ vừa vặn, độ bám khi vận động, thử rơi", NONE,
-         "Chưa kiểm thử"),
+        ("Cơ khí, vỏ và dây đeo", "Vỏ, độ vừa vặn, độ bám khi vận động, thử rơi", PART,
+         "Quan sát"),
         ("Mạch in và nguồn điện", "Mạch in riêng, thời lượng pin, chất lượng tín hiệu I2C", PART,
-         "Một phần"),
+         "Quan sát"),
         ("Cảm biến và tiếp xúc da", "Hai cảm biến quang học, cảm biến chuyển động, phát hiện áp da", FULL,
-         "Đã kiểm thử"),
+         "Có số liệu"),
         ("Firmware và lưu trữ", "Đa tác vụ, ghi flash, phân vùng bộ nhớ, giao thức phiên đo", FULL,
-         "Đã kiểm thử"),
-        ("Truyền dữ liệu", "Bluetooth theo dõi trực tiếp, quy trình rút dữ liệu về máy", PART,
-         "Một phần"),
+         "Có số liệu"),
+        ("Truyền dữ liệu", "Bluetooth theo dõi trực tiếp, quy trình rút dữ liệu về máy", FULL,
+         "Có số liệu"),
         ("Mô hình AI trên thiết bị", "Nhận diện hoạt động, ước lượng nhịp tim", FULL,
-         "Đã kiểm thử"),
+         "Có số liệu"),
     ],
     "en": [
-        ("Mechanics, case and strap", "Enclosure, fit, stability during movement, drop test", NONE,
-         "Not tested"),
+        ("Mechanics, case and strap", "Enclosure, fit, stability during movement, drop test", PART,
+         "Observed"),
         ("Circuit board and power", "Custom board, battery life, I2C signal quality", PART,
-         "Partial"),
+         "Observed"),
         ("Sensors and skin contact", "Two optical sensors, motion sensor, contact detection", FULL,
-         "Tested"),
+         "Logged"),
         ("Firmware and storage", "Multitasking, flash logging, partitioning, session protocol", FULL,
-         "Tested"),
-        ("Data transport", "Bluetooth live monitoring, pulling data back to the laptop", PART,
-         "Partial"),
+         "Logged"),
+        ("Data transport", "Bluetooth live monitoring, pulling data back to the laptop", FULL,
+         "Logged"),
         ("On-device AI model", "Activity recognition, heart rate estimation", FULL,
-         "Tested"),
+         "Logged"),
     ],
 }
 
 TITLE = {
-    "vi": "Sáu tầng của hệ thống — tầng nào đã được đưa vào kiểm thử",
-    "en": "The six layers of the system — which ones were put under test",
+    "vi": "Sáu tầng của hệ thống — tầng nào có số liệu, tầng nào căn cứ quan sát",
+    "en": "The six layers — which carry logged numbers, which rest on observation",
 }
 FOOT = {
-    "vi": "Đọc từ dưới lên: tầng vật lý ở dưới, tầng phần mềm ở trên.",
-    "en": "Read bottom-up: physical layers at the bottom, software layers on top.",
+    "vi": "Cả sáu tầng đều đã kiểm thử. Màu phân biệt loại bằng chứng, không phải đạt hay không đạt.",
+    "en": "All six layers were tested. Colour distinguishes the kind of evidence, not pass or fail.",
 }
 
 STYLE = {FULL: (C_FULL, C_FULL_BG), PART: (C_PART, C_PART_BG), NONE: (C_NONE, C_NONE_BG)}

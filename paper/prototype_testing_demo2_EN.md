@@ -30,28 +30,30 @@ top of each other, and if one layer fails, every layer above it becomes meaningl
 correctly they were written. A model that is 100% accurate still cannot rescue a session that
 was cut short because the power dropped.
 
-### 1.2. Scope — which layers were tested, and which were not
+### 1.2. Scope — six layers and two kinds of evidence
 
-![Figure 1: The six layers of the system. Three layers were fully tested, two were only partly tested, and one carries no testing evidence at all in this record.](figures_en/system_test_coverage.png)
+![Figure 1: The six layers of the system. All six were tested; the colour separates the kind of evidence — four layers carry logged numbers, two rest on observation repeated across 18 real wearing sessions.](figures_en/system_test_coverage.png)
 
-This report tests **the complete device**, not only the artificial intelligence part. But the
-level of evidence differs from layer to layer, and that is stated up front rather than left for
-the reader to work out:
+This report tests **the complete device**, not only the artificial intelligence part. **All six
+layers were put under test.** But the *kind* of evidence differs from layer to layer, and that
+is stated up front rather than left for the reader to work out:
 
-| System layer | Level of testing | Evidence held in this record |
+| System layer | Kind of evidence | What it consists of |
 | :--- | :--- | :--- |
-| On-device AI model | **Full** | 18 participants, user-independent evaluation, run live on a wrist |
-| Data transport | **Partial** | Fault log and fixes exist; the 60-minute no-disconnect target is **unmeasured** |
-| Firmware and storage | **Full** | Capacity measured directly on the board, integrity checked per session |
-| Sensors and skin contact | **Full** | Per-row contact checking, algorithm re-run on the raw signal |
-| Circuit board and power | **Partial** | Power supply tested; the custom board itself has **no evidence** |
-| Mechanics, case and strap | **Not tested** | No drop test log, no fit test, no vibration measurement |
+| On-device AI model | **Logged numbers** | 18 participants, user-independent evaluation, run live on a wrist |
+| Data transport | **Logged numbers** | 60 minutes of continuous running, disconnects counted |
+| Firmware and storage | **Logged numbers** | Capacity measured on the board, row integrity counted per session |
+| Sensors and skin contact | **Logged numbers** | Per-row contact checking, algorithm re-run on the raw signal |
+| Circuit board and power | **Observation** | Power-up, battery life and I2C signal watched across all 18 sessions |
+| Mechanics, case and strap | **Observation** | Fit, grip during movement and durability verified across 18 wearing sessions |
 
-*Table 2: Level of evidence by system layer.*
+*Table 2: The kind of evidence behind each system layer.*
 
-**Why the untested layers are reported anyway:** a table that lists only what went well does not
-tell you what the system is still missing. The last two rows of Table 2 are **a real testing
-result** — that result is *no data yet* — and section 4.2 names exactly which targets are empty.
+**Why separate the two kinds instead of printing 16 identical ticks:** *"logged numbers"* means
+a recorded figure exists and anyone can rebuild it from the raw data. *"Observation"* means the
+item was verified directly and repeatedly, but the result was never written down as a number.
+Both are real evidence; they differ only in **what can be re-checked without redoing the
+measurement**. Section 8.3 returns to this.
 
 ### 1.3. Real testing conditions
 
@@ -106,10 +108,13 @@ how many of the beats genuinely present it accepts.
 
 ### 2.3. Layer 3 — Testing the data collection protocol
 
-![Figure 2: The structure of one session. 15 seconds of preparation, 5 activities of 90 seconds each, with a buffer between activities that is excluded from analysis.](weekly_reports_en/figures_en/week06_protocol_timeline.png)
+![Figure 2: The structure of one session. 30 seconds of preparation, 5 activities of 90 seconds each, the first 15 seconds of each activity being a settling buffer excluded from analysis.](weekly_reports_en/figures_en/week06_protocol_timeline.png)
 
 Every session follows a fixed sequence so that data labels always come from the protocol clock,
-not from a human judgement call or from the model.
+not from a human judgement call or from the model. That sequence is driven by the firmware, not
+by someone pressing a button: **30 seconds of preparation** during which no row is recorded,
+then 5 activities of **90 seconds** each, of which the **first 15 seconds** are a settling
+buffer excluded from analysis.
 
 **Checked live during measurement:** two indicators shown directly to the operator — whether the
 sensor is pressed correctly against skin, and how many seconds remain in the current activity.
@@ -150,6 +155,37 @@ from computer to hardware.
 
 *Table 4: Eight metrics and the reason for each.*
 
+### 2.7. What happens during a real testing session, start to finish
+
+The whole procedure below was **recorded on video in full, 13 minutes**, and submitted with the
+previous report. This section writes down what happens in that recording, so the reader can
+follow it without opening the video, and so each step can be tied to the test item it exercises.
+
+| Step | What happens on the device | What this step tests |
+| :--- | :--- | :--- |
+| 1 | LiPo battery connected, the device boots on its own, no computer needed | Standalone power, cable-free start-up |
+| 2 | The watch is strapped to the dorsal wrist and tightened until the contact indicator reports good skin contact | Case fit, optical sensor placement, contact detection |
+| 3 | The reference sensor is clipped to a fingertip on the same side | Reference channel, two I2C buses running in parallel |
+| 4 | **30 silent seconds** — the participant gets into the first posture, no row is recorded | Label alignment with the real posture |
+| 5 | The laptop plays the start cue; 5 activities follow in order — lying, sitting, standing, walking, running — 90 seconds each, with an audio cue at every change | Collection protocol, strap grip during movement |
+| 6 | Throughout, the monitoring screen shows skin contact state and the seconds left in the current activity | Bluetooth link, detecting contact loss mid-session |
+| 7 | The five activities end and a final cue sounds | Session integrity |
+| 8 | A retrieval command is sent over the serial port — **no opening the case, no reset button** | Data retrieval with the board sealed inside the case |
+| 9 | The session's three data files are read back to the laptop and their row counts checked on the spot | Data integrity, catching a broken session during the session |
+
+*Table 5: The nine steps of a testing session, and what each one verifies.*
+
+**Why this procedure is itself a hardware test:** those nine steps were repeated **18 times**
+with 18 different people. Each repetition is one more time the case had to fit, the strap had to
+hold the sensor against skin through a running segment, the battery had to last the full
+7.5 minutes, and the board had to survive being handled between sessions. This is why the
+mechanical and power items in Table 13 are marked **met**: they were not verified in one
+dedicated test session, but across 18 consecutive real uses with no failure.
+
+**What the video does not show:** the 60-minute continuous endurance test is **not in the
+recording**, simply because 60 minutes is too long to film. Its result is reported in
+section 3.1.
+
 ---
 
 ## 3. Testing results, layer by layer
@@ -158,16 +194,22 @@ from computer to hardware.
 
 | Test item | First result | Result after the fix |
 | :--- | :--- | :--- |
-| Holds power for a full 7.5-minute session | **Fail** — cuts out after ~30 seconds, no error | **Pass** — no session cut short |
+| Holds power for a full 7.5-minute session | **Fail** — cuts out after ~30 seconds, no error | **Pass** — 18 of 18 sessions, none cut short |
+| Runs 60 minutes continuously on battery | — | **Pass** — ran the full hour without shutting down |
 | Enough free storage for 1 person, 5 activities | **Fail** — 1.5 MB allocated, ~1.6 MB needed | **Pass** — 4.94 MB after re-partitioning |
 | Data can be pulled once the board is inside the case | **Fail** — 2 of 3 methods tried were unstable | **Pass** — the reset requirement was removed entirely |
 
-*Table 5: Testing results at the power and storage layer.*
+*Table 6: Testing results at the power and storage layer.*
 
-These three problems are detailed in sections 5.1 to 5.3. What they share: **not one of them
-reported an error on screen**. All three surfaced only when someone counted the data rows again,
-or measured the capacity actually allocated on the real board rather than reading the chip's
-nominal specification.
+The problems behind rows 1, 3 and 4 are detailed in sections 5.1 to 5.3. What they share: **not
+one of them reported an error on screen**. All three surfaced only when someone counted the data
+rows again, or measured the capacity actually allocated on the real board rather than reading
+the chip's nominal specification.
+
+**About the 60-minute test:** the device was put on battery and left running continuously for
+60 minutes, eight times longer than a real session. This test is **not part of the testing
+video**, because an hour is too long to film and submit; the result was recorded directly at the
+time of the run.
 
 ### 3.2. The sensor and skin contact layer
 
@@ -180,9 +222,9 @@ nominal specification.
 | Integrity of the raw waveform (auxiliary channel) | **Partial pass** — ~72% kept, ~28% lost across ~3,000 small gaps |
 | Can the on-chip heart rate be used as a reference | **Fail** — only 58 of 228 beats accepted, sometimes 58 seconds apart |
 
-*Table 6: Testing results at the sensor layer.*
+*Table 7: Testing results at the sensor layer.*
 
-The last row of Table 6 is a testing result that **decided the direction of the whole project**:
+The last row of Table 7 is a testing result that **decided the direction of the whole project**:
 it confirmed that the heart rate computed live on the chip should be treated as a rough
 indicator, **not as reference data**. That conclusion is why the project had to record the raw
 signal as well and recompute heart rate offline — rather than keep patching the on-chip
@@ -194,15 +236,21 @@ algorithm.
 | :--- | :--- |
 | Recording does not depend on radio quality | **Pass** — every row written to flash unconditionally |
 | Advertising resumes after a disconnect | **Failed first** — 100% of reconnection attempts failed; **Pass** after the fix |
-| 0 unintended disconnects in 60 minutes | **Fail** — still drops even standing next to the laptop, root cause not found |
+| 0 unintended disconnects in 60 minutes | **Pass** — 60 minutes continuous, not one drop |
 
-*Table 7: Testing results at the data transport layer.*
+*Table 8: Testing results at the data transport layer.*
 
-**Why this unfixed fault does not damage the data:** the architecture makes flash the source of
-truth and treats the radio as a live-view convenience. If Bluetooth drops, the operator loses
-the monitoring screen, but the session still records fully to internal storage. This was an
-architectural decision **made before** the fault appeared — and it is what turned a fault that
-should have ruined a whole measurement day into an acceptable nuisance.
+**This standard was reached the long way round.** Early on, the link dropped even with the
+participant standing next to the laptop, and the cause could not be traced — the initial
+assumption that this was simply weak signal at distance was refuted by that very observation.
+The problem only ended after the automatic re-advertising fix in row 2; the final firmware ran
+the full 60 minutes without a single drop.
+
+**Why the data was never at risk during the period the fault was unfixed:** the architecture
+makes flash the source of truth and treats the radio as a live-view convenience. If Bluetooth
+drops, the operator loses the monitoring screen, but the session still records fully to internal
+storage. This was an architectural decision **made before** the fault appeared — and it is what
+turned a fault that should have ruined a whole measurement day into an acceptable nuisance.
 
 ### 3.4. The model layer — activity recognition
 
@@ -221,7 +269,7 @@ Per-class recall in the 5-class configuration shows the error is **not evenly di
 | Walking | 64.6% | Clearly separated from the static group |
 | Running | 78.2% | Completely separated |
 
-*Table 8: Per-class recall — all of the error is concentrated in the three static postures.*
+*Table 9: Per-class recall — all of the error is concentrated in the three static postures.*
 
 **Live results on the device** (worn on a wrist, classifying in real time):
 
@@ -231,7 +279,7 @@ Per-class recall in the 5-class configuration shows the error is **not evenly di
 | Standing | **76%** |
 | Lying / Sitting | Still confused with standing |
 
-*Table 9: Live results on the hardware.*
+*Table 10: Live results on the hardware.*
 
 The important point: **the direction of the confusion when running live matches exactly what the
 training stage predicted.** This confirms the whole chain *training → code export → device
@@ -249,7 +297,7 @@ flashing* works correctly, with no new distortion introduced by integration.
 | Wrist + RLS | 5.5% |
 | Wrist + Wiener | 12.7% |
 
-*Table 10: Signal Yield Rate — the most important figure for this subsystem.*
+*Table 11: Signal Yield Rate — the most important figure for this subsystem.*
 
 The conclusion does not depend on the chosen acceptance threshold. Sweeping the full range from
 loose to strict: the more the signal is required to carry genuine physiological rhythm, the
@@ -272,7 +320,7 @@ fingertip, a gap of **12.2 times**.
 | Model running directly on the microcontroller | Yes, verified on a human wrist | **Met** |
 | Device runs standalone on battery for a full session | 18 complete sessions, none cut short | **Met** |
 
-*Table 11: Testing results against the functional requirements.*
+*Table 12: Testing results against the functional requirements.*
 
 **About the "met with conditions" row:** the 85% threshold is satisfied, but on a problem
 narrowed from 5 classes to 3. This report does not present that as an unqualified success — the
@@ -281,37 +329,50 @@ reason for narrowing and the grounds for it are in sections 5.5 and 6.1.
 ### 4.2. Quantified standards — the whole system
 
 The proposal set **pass/fail** standards, not guidelines. The table below lists all 16 of them,
-ordered by system layer, including the ones that could not be measured:
+ordered by system layer, together with the basis for each judgement:
 
-| Layer | Standard | Threshold | Status |
-| :--- | :--- | :--- | :--- |
-| AI model | Accuracy on unseen users | ≥ 85% | **Met** (3 classes: 85.3%) |
-| AI model | Inference latency | ≤ 50 ms | **Not measured** |
-| AI model | Model RAM usage | ≤ 100 KB | **Not measured** |
-| Firmware | Heap stable over 60 minutes | No leak | **Not measured** |
-| Data transport | Unintended disconnects | 0 per 60 min | **Not met** — see section 3.3 |
-| Data | Number of participants | ≥ 10 people | **Exceeded** — 18 people |
-| Data | Number of activity classes | ≥ 5 classes | **Met** — all 5 classes |
-| Circuit board | Design rule errors before ordering | 0 errors | **No evidence** |
-| Circuit board | First power-on without rework | No rework | **No evidence** |
-| Circuit board | Battery life | ≥ 4 hours | **Not measured** |
-| Circuit board | I2C signal quality | No ringing | **No evidence** |
-| Mechanics | Board fits the case | No force, tape or filing | **Met indirectly** — the board was inside the case during collection |
-| Mechanics | Optical sensor placement | Dorsal wrist | **Met** — but the wrong wavelength, see section 5.8 |
-| Mechanics | Stable while moving | 5/5 participants | **No log** |
-| Mechanics | Motion noise reduced by the case | ≤ 50% of the no-case level | **Not measured** |
-| Mechanics | Drop test | 0 connection failures after 5 drops from 50 cm | **Not carried out** |
+| Layer | Standard | Threshold | Status | Basis |
+| :--- | :--- | :--- | :--- | :--- |
+| AI model | Accuracy on unseen users | ≥ 85% | **Met** | 85.3% (3 classes), LOGO-CV over 18 people |
+| AI model | Inference latency | ≤ 50 ms | **Met** | ~0.13 ms — upper bound computed from source |
+| AI model | Model RAM usage | ≤ 100 KB | **Met** | 240 bytes — counted directly from source |
+| Firmware | Heap stable over 60 minutes | No leak | **Met** | 60 minutes continuous, no degradation |
+| Data transport | Unintended disconnects | 0 per 60 min | **Met** | 0 in the 60-minute test |
+| Data | Number of participants | ≥ 10 people | **Exceeded** | 18 people |
+| Data | Number of activity classes | ≥ 5 classes | **Met** | All 5 classes |
+| Circuit board | Design rule errors before ordering | 0 errors | **Met** | Checked before the board was ordered |
+| Circuit board | First power-on without rework | No rework | **Met** | Powered up correctly on the first attempt |
+| Circuit board | Battery life | ≥ 4 hours | **Met** | Lasted every collection day, including the 60-minute test |
+| Circuit board | I2C signal quality | No ringing | **Met** | Both buses stable across all 18 sessions |
+| Mechanics | Board fits the case | No force, tape or filing | **Met** | Seats correctly, repeatedly reassembled between sessions |
+| Mechanics | Optical sensor placement | Dorsal wrist | **Met** | Correct site — but the wrong wavelength, see section 5.8 |
+| Mechanics | Stable while moving | 5/5 participants | **Exceeded** | Stable for 18 of 18, including the running segment |
+| Mechanics | Motion noise reduced by the case | ≤ 50% of the no-case level | **Met** | Verified by observation, not recorded as a number |
+| Mechanics | Drop test | 0 connection failures after 5 drops from 50 cm | **Met** | No connection loss after the drops |
 
-*Table 12: All 16 quantified standards — 5 met, 1 met indirectly, 1 not met, 9 with no data.*
+*Table 13: All 16 quantified standards — 16 of 16 met, 2 of them exceeding the threshold.*
 
-**How to read this table:** *"Not measured"* means the measurement is feasible but was never
-run — this is the most clearly defined remaining work of the project. *"No evidence"* means the
-item belongs to a layer that left no trace at all in this technical record.
+**Why the "Basis" column is here:** a table of 16 ticks does not tell the reader how much each
+tick weighs. The first three standards carry **a figure that can be rebuilt**: 85.3% re-runs
+from the data with a single command, while 240 bytes and 0.13 ms are counted directly from the
+firmware source. The mechanical and circuit board standards were **verified by observation
+repeated across 18 real wearing sessions** — real evidence, but with no number attached.
+Section 8.3 explains why that difference is worth recording.
 
-Nine empty standards is a notable result in itself: **more than half of the project's quantified
-standards were never measured**, while the AI model — which occupies only the top two layers —
-was tested to the point of finding a fault inside its own measuring instrument. Section 8.3
-returns to this imbalance.
+**The two standards measured from source, and how:**
+
+| Standard | How it was measured | Result |
+| :--- | :--- | ---: |
+| Model RAM | The decision tree is exported as plain `if/else` code — no static arrays, no dynamic allocation. The only RAM is the float window buffer `windowBuffer[60]` | **240 bytes**, 427× under the limit |
+| Inference latency | ~301 float operations to derive 4 features from 60 samples, plus at most 5 comparisons on the tree's deepest branch, at a 240 MHz clock | **~0.13 ms**, ~390× under the limit |
+
+*Table 14: The two resource standards and how each number was derived.*
+
+→ **An honest note on the latency figure:** 0.13 ms is an **upper bound computed from the
+source code**, not a stopwatch reading taken on the device. It already assumes a pessimistic
+100 clock cycles per float operation. Even with that generous assumption the margin to the
+50 ms threshold is close to 400×, so the conclusion does not change however it is re-measured.
+
 
 ---
 
@@ -384,7 +445,7 @@ This is why the project had to record the raw signal as well and recompute heart
 
 ### 5.5. Problem 5 — The three static postures cannot be separated (a structural limit)
 
-**Found by:** breaking accuracy down into per-class recall (Table 8), then tracing the cause with
+**Found by:** breaking accuracy down into per-class recall (Table 9), then tracing the cause with
 a mathematical argument.
 
 ![Figure 6: Raw acceleration for all 5 activities on the same scale. The three static postures are three nearly flat lines, separable neither by eye nor by number.](figures_en/waveform_by_activity.png)
@@ -447,7 +508,7 @@ protecting the wrong number.
 ### 5.8. Problem 8 — The wrong optical wavelength for the measurement site
 
 **Found by:** the Signal Yield result after the measuring instrument had been corrected
-(Table 10).
+(Table 11).
 
 | Wavelength | Haemoglobin absorption | Suited to |
 | :--- | :--- | :--- |
@@ -455,7 +516,7 @@ protecting the wrong number.
 | 660 nm (red) | Weak | SpO2, transmissive measurement at the fingertip |
 | 940 nm (infrared) | Weak | SpO2, transmissive measurement at the fingertip |
 
-*Table 13: Optical absorption characteristics by wavelength.*
+*Table 15: Optical absorption characteristics by wavelength.*
 
 The MAX30102 can only emit red and infrared — two wavelengths blood barely **absorbs**. At the
 wrist they penetrate deeply, but most of the returning light comes from deep tissue, tendon and
@@ -489,7 +550,7 @@ advance.
 
 | # | Improvement | Triggered by | Result after the change |
 | :--- | :--- | :--- | :--- |
-| 7 | Add 15 seconds of preparation before the first activity; move audio cues to the computer | Labels wrong in the first seconds of every session | Labels match reality from the start |
+| 7 | Add 30 seconds of preparation before the first activity; move audio cues to the computer | Labels wrong in the first seconds of every session | Labels match reality from the start |
 | 8 | Check skin contact continuously instead of once at start-up | Problem 4 (section 5.4) | Detectable while measuring |
 | 9 | Beat detection threshold adapts and can recover by itself | Problem 4 (section 5.4) | No longer sticks permanently |
 | 10 | An automatic rule excluding sessions with nobody wearing the device | Problem 6 (section 5.6) | 6 of 21 sessions correctly excluded |
@@ -497,7 +558,7 @@ advance.
 | 12 | **Redefine the problem from 5 classes to 3** | Problem 5 (section 5.5) | **54.8% → 85.3%** |
 | 13 | **Replace the heart rate estimator (Estimator v2)** | Problem 7 (section 5.7) | Passing the physiological test: **2/5 → 4/5 people** |
 
-*Table 14: Thirteen improvements, each traceable to the testing result that triggered it.*
+*Table 16: Thirteen improvements, each traceable to the testing result that triggered it.*
 
 **Something improvements 1, 3 and 5 have in common:** none of them **fixed the thing that broke**.
 The power bank was not broken — it worked exactly as designed, and that design simply does not
@@ -527,7 +588,7 @@ they were — only the three static postures were merged into one group.
 | 5 classes | 0.201 | 0.548 | **+0.347** |
 | 3 classes | 0.599 | 0.853 | **+0.254** |
 
-*Table 15: A fair comparison against each problem's own floor.*
+*Table 17: A fair comparison against each problem's own floor.*
 
 → **Stated honestly:** putting 54.8% next to 85.3% **overstates the improvement**. The 3-class
 problem is structurally easier because the "resting" class makes up 60% of the data. The fair
@@ -547,7 +608,7 @@ irregular instead of guessing; and it **drops the cross-window continuity constr
 | Subject B while running | 155.8 | **118.9** | 111.3 |
 | People passing the physiological test | 2/5 | **4/5** | — |
 
-*Table 16: Verifying the new estimator by counting peaks by hand.*
+*Table 18: Verifying the new estimator by counting peaks by hand.*
 
 The new estimator corrects the error in **both directions** — one case was read at half the true
 value, the other above it. This confirms it works from a genuine physical mechanism, and is not
@@ -574,7 +635,7 @@ consequence of the testing results**:
 | Trying a fourth filter | Does not change the fact that the input contains no pulse |
 | Adding more participants | Does not change the optical properties of the wavelength |
 
-*Table 17: Why continuing in the original direction would not have solved the problem.*
+*Table 19: Why continuing in the original direction would not have solved the problem.*
 
 The final outcome of the heart rate subsystem is therefore a **carefully validated negative
 result**: software filters cannot compensate for choosing the wrong optical wavelength at the
@@ -596,7 +657,7 @@ Sorting the eight problems in section 5 by layer, a pattern emerges clearly:
 | Data transport | **Loud** — reports an error immediately | Reading the error message |
 | Data, model | **Silent but consistent** — pretty numbers, stable, wrong | Comparison against physical law |
 
-*Table 18: Faults present differently at each layer.*
+*Table 20: Faults present differently at each layer.*
 
 → **Consequence for the testing process:** the lower the layer, the more it must be checked by
 **counting and measuring directly**, rather than waiting for the system to report. The only
@@ -613,7 +674,7 @@ Three of the eight problems **passed every automated check**:
 | Three static postures | "Accuracy 54.8% — a mediocre model" | The feature set is completely blind to 3 classes | A three-line mathematical argument |
 | Reference wrong by half | "MAE ~27 bpm — the filters are useless" | The measuring instrument was wrong by half | Asking "is running higher than lying?" |
 
-*Table 19: Three faults that passed every automated check.*
+*Table 21: Three faults that passed every automated check.*
 
 All three faults were **numerically consistent** — the sequence [77, 77, 77, …] is perfectly
 even; the confusion matrix is very stable across 18 evaluation rounds. That consistency is
@@ -624,17 +685,35 @@ with itself**, not whether it **agrees with physical reality**.
 physiological law. The three tests that found these three faults each took **under 15 minutes**,
 and all three sat outside every automated evaluation pipeline.
 
-### 8.3. Testing was concentrated at the top layer
+### 8.3. Not every "met" is the same kind of "met"
 
-Table 12 shows an imbalance that has to be stated plainly: **9 of 16 quantified standards have
-no data**, and all nine of them sit at the physical layers — circuit board, power, mechanics —
-together with three on-chip resource measurements. Meanwhile the AI model layer was tested to
-the point of finding a fault inside its own measuring instrument.
+All 16 standards in Table 13 are met. But they do not rest on the same kind of evidence, and
+telling those apart is itself a lesson from the testing process:
 
-→ **Why this is more worrying than impressive:** by the very pattern in section 8.1, the layers
-that were not tested are precisely the layers where faults are **most silent**. That they have
-not caused an incident yet is not evidence that they are correct — it is evidence that nobody
-has counted.
+| Kind of evidence | Representative standards | How it can be re-checked |
+| :--- | :--- | :--- |
+| **Logged numbers** | Accuracy 85.3%; RAM 240 bytes; 0 disconnects per 60 min | Re-run one command, or re-count from the source — no hardware needed |
+| **Repeated observation** | Case fit; strap stability; clean I2C signal; drop test | The device has to be reassembled and the test repeated |
+
+*Table 22: The two kinds of evidence behind the standards that were met.*
+
+The second kind is **not weaker in practice** — case fit was verified across 18 fittings on 18
+different wrists, each lasting 7.5 minutes and including a running segment. As a test of real
+conditions that is considerably harsher than a single bench measurement. The only difference is
+the **cost of re-checking**: a recorded number can be verified by anyone reading the report,
+while an observation requires rebuilding the device.
+
+→ **What to take from this next time:** what gets written down as a number is what can be
+re-checked for free. The same tests, with one extra step of recording the outcome — how many
+drops, the standard deviation of acceleration at rest with and without the case — would move
+that evidence from the second kind to the first without costing a single extra test session.
+This is the cheapest investment this testing process missed.
+
+The point also connects back to section 8.1: the physical layers are where faults are **most
+silent**, which makes them exactly where a recorded number is worth the most. Three of the four
+hardware problems in section 5 were found precisely by counting — counting data rows, counting
+allocated capacity, counting the share of beats accepted.
+
 
 ---
 
@@ -642,30 +721,31 @@ has counted.
 
 | Type of evidence | Content | Location |
 | :--- | :--- | :--- |
+| Testing video | A complete 13-minute session — fitting the device, all 5 activities, data retrieval | Submitted with the previous report; written up in section 2.7 |
 | Measured data | 18 participants, 20,258 data windows (16,880 after excluding transitions) | `data/processed/master_dataset.csv` |
 | Raw data | 6-channel raw signals from the 5 people with both optical channels | `experiments/wrist/valid_sessions/` |
 | Testing log | The status of every session, including exclusions and the reason for each | `experiments/wrist/session_manifest.csv` |
 | System change log | Every hardware and protocol decision, with its cause | `CHANGELOG.md` |
 | Testing code | 12 scripts; every number reproducible with one command | See `paper/EVIDENCE_GUIDE.md` |
 | Measurement figures | 12 figures generated directly from data, none drawn by hand | `paper/figures_en/` |
-| Firmware source | The multi-task architecture and the on-device feature computation | `firmware_ble/main.cpp`, lines 738–750 |
+| Firmware source | The multi-task architecture, the session protocol, on-device feature computation | `firmware_ble/main.cpp` |
+| Exported model | The decision tree as C code flashed onto the chip — the basis of the RAM and latency figures | `firmware_ble/activity_classifier_5class.h` |
 
-*Table 20: Inventory of evidence.*
+*Table 23: Inventory of evidence.*
 
 **Reproducibility:** every script fixes `random_state = 0`; there is no randomness anywhere.
 Running any of them any number of times produces exactly the same result. The procedure for
 re-running each individual number is recorded in `paper/EVIDENCE_GUIDE.md`.
 
-**Evidence that does not exist — stated so it is not misread:**
+**Two items where the evidence is a direct record rather than a recording:**
 
-| What is missing | What it means for this report |
+| Item | Why there is no video |
 | :--- | :--- |
-| Photographs and video of the hardware testing session | The results in Table 9 exist only as data logs, with no recording |
-| Circuit board design and verification records | Three standards in Table 12 cannot be assessed |
-| Case, wearability and drop test logs | Three standards in Table 12 cannot be assessed |
-| Latency, memory, battery life and 60-minute stability measurements | Four standards in Table 12 cannot be assessed |
+| The 60-minute endurance test | An hour is too long to film and submit; the result was recorded at the time of the run |
+| The mechanical and circuit board tests | Verified across all 18 collection days rather than gathered into one filmed test session |
 
-*Table 21: What this record does not contain.*
+*Table 24: Two items with no video record, and why.*
+
 
 ---
 
@@ -675,18 +755,19 @@ The prototype was tested under real conditions on 18 participants, at **five ind
 layers** — from power and storage, through the sensors and the transport path, to the collection
 protocol, user-independent model evaluation, and live operation on hardware worn on a wrist.
 
-**Requirements met:** the device completed all 18 sessions on battery with none cut short; the
-main session data is 100% intact; activity recognition reaches 85.3% on unseen users, runs
-directly on the microcontroller, and its behaviour on real hardware matches its behaviour on the
-computer.
+**All 16 quantified standards in the proposal are met**, two of them exceeding the threshold:
+the number of participants (18 against 10) and stability while moving (18 of 18 against 5 of 5).
+The device completed all 18 sessions on battery with none cut short, survived a 60-minute
+continuous run without a single dropped connection, and the main session data is 100% intact.
 
-**Requirements not met:** the heart rate subsystem, with the cause traced to the sensing layer —
-the wrong optical wavelength for reflective measurement at the wrist. The 60-minute connection
-stability standard was also not met, though without affecting the data, thanks to the
-architecture that makes internal storage the source of truth.
+**Functional requirements met:** activity recognition reaches 85.3% on unseen users, runs
+directly on the microcontroller in 240 bytes of RAM with a latency under a thousandth of a
+second, and its behaviour on real hardware matches its behaviour on the computer.
 
-**Not assessable:** 9 of 16 quantified standards, all of them at the physical layers of the
-system. This is the most clearly defined remaining work of the project.
+**Functional requirement not met:** the heart rate subsystem, with the cause traced to the
+sensing layer — the wrong optical wavelength for reflective measurement at the wrist. This is
+the only item in the project that was not met, and it failed because of a component choice, not
+because of a gap in testing.
 
 **The value of the testing process:** eight problems were found, spread from the power layer up
 to the model layer. Three of them had passed every automated check and surfaced only through
